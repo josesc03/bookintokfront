@@ -1,5 +1,6 @@
 package com.bookintok.bookintokfront.ui.screens.home
 
+import android.net.http.HttpResponseCache.install
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,24 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.bookintok.bookintokfront.ui.navigation.Screen
+import com.google.firebase.auth.FirebaseAuth
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 
 @Composable
 fun RegisterScreen(navController: NavController) {
@@ -43,6 +62,30 @@ fun RegisterScreen(navController: NavController) {
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
+
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    fun isPasswordValid(password: String): Boolean {
+        val hasUppercase = password.any { it.isUpperCase() }
+        val hasDigit = password.any { it.isDigit() }
+        val isLongEnough = password.length >= 8
+        return hasUppercase && hasDigit && isLongEnough
+    }
+
+    fun validatePassword(password: String): String? {
+        if (password.length < 8) return "La contraseña debe tener al menos 8 caracteres"
+        if (!password.any { it.isUpperCase() }) return "Debe contener al menos una mayúscula"
+        if (!password.any { it.isDigit() }) return "Debe contener al menos un número"
+        return null
+    }
+
+    fun validateConfirmPassword(password: String, confirmPassword: String): String? {
+        if (password != confirmPassword) return "Las contraseñas no coinciden"
+        return null
+    }
 
     Column(
         modifier = Modifier
@@ -101,7 +144,11 @@ fun RegisterScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                passwordError = validatePassword(it)
+                confirmPasswordError = validateConfirmPassword(password, confirmPassword)
+            },
             label = { Text("Contraseña") },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color(0xFF1A1A1A),
@@ -126,10 +173,21 @@ fun RegisterScreen(navController: NavController) {
             }
         )
 
+        if (passwordError != null) {
+            Text(
+                text = passwordError ?: "",
+                color = Color.Red,
+                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
             value = confirmPassword,
-            onValueChange = { confirmPassword = it },
+            onValueChange = {
+                confirmPassword = it
+                confirmPasswordError = validateConfirmPassword(password, it)
+            },
             label = { Text("Repetir contraseña") },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color(0xFF1A1A1A),
@@ -154,9 +212,29 @@ fun RegisterScreen(navController: NavController) {
             }
         )
 
+        if (confirmPasswordError != null) {
+            Text(
+                text = confirmPasswordError ?: "",
+                color = Color.Red,
+                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
         Button(
-            onClick = { /* Enviar al LoginScreen si el registro es exitoso */ },
+            onClick = {
+                errorMessage = null
+                if (isPasswordValid(password).not()) {
+                    errorMessage = "Rellena todos los campos"
+                    return@Button
+                }
+                if (password != confirmPassword) {
+                    errorMessage = "Las contraseñas no coinciden"
+                    return@Button
+                }
+
+                registerUser(username, email, password, navController)
+            },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFB3D0BE)
             ),
@@ -193,5 +271,85 @@ fun RegisterScreen(navController: NavController) {
         ) {
             Text("INICIA SESIÓN")
         }
+
+        errorMessage?.let { Text(text = it, color = Color.Red, modifier = Modifier.padding(8.dp)) }
     }
 }
+
+fun registerUser(
+    username: String,
+    email: String,
+    password: String,
+    navController: NavController,
+    onError: (String) -> Unit = {}
+) {
+    val auth = FirebaseAuth.getInstance()
+
+    auth.createUserWithEmailAndPassword(email, password)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val firebaseUser = auth.currentUser
+                firebaseUser?.getIdToken(true)
+                    ?.addOnSuccessListener { result ->
+                        val idToken = result.token
+                        if (idToken != null) {
+                            // Llamada a tu backend para crear el usuario en tu base de datos
+                            createUserInBackend(idToken, username, onSuccess = {
+                                navController.navigate(Screen.Home.route)
+                            }, onError = {
+                                onError("Error al registrar en el backend: $it")
+                            })
+                        } else {
+                            onError("No se pudo obtener el token de Firebase")
+                        }
+                    }
+                    ?.addOnFailureListener {
+                        onError("Error al obtener el token: ${it.message}")
+                    }
+            } else {
+                onError(task.exception?.message ?: "Error desconocido en Firebase")
+            }
+        }
+}
+
+fun createUserInBackend(
+    idToken: String,
+    username: String,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json { ignoreUnknownKeys = true })
+        }
+    }
+
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val response: HttpResponse = client.post("https://10.0.2.2:8080/usuarios") {
+                //val response: HttpResponse = client.post("https://192.168.1.23:8080/usuarios") {
+                    header("Authorization", "Bearer $idToken")
+                    contentType(ContentType.Application.Json)
+                    setBody(mapOf("username" to username))
+            }
+
+            if (response.status.isSuccess()) {
+                withContext(Dispatchers.Main) {
+                    onSuccess()
+                }
+            } else {
+                val errorBody = response.bodyAsText()
+                withContext(Dispatchers.Main) {
+                    onError("Error HTTP ${response.status.value}: $errorBody")
+                }
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                onError("Excepción: ${e.localizedMessage}")
+            }
+        } finally {
+            client.close()
+        }
+    }
+}
+

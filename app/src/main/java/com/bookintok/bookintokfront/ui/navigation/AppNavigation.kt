@@ -72,6 +72,9 @@ fun AppNavigation() {
             ProvinceScreen(
                 onPointSelected = { point ->
                     navController.navigate(Screen.Main.route)
+                },
+                onBack = {
+                    navController.navigateUp()
                 }
             )
         }

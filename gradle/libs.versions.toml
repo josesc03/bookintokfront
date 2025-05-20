@@ -1,24 +1,43 @@
 [versions]
 agp = "8.10.0"
+animation = "1.8.1"
+composeBomVersion = "2023.10.01"
+firebaseBom = "33.13.0"
 hiltAndroid = "2.48"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
+kotlinxSerializationJson = "1.6.3"
+ktorClientCio = "2.3.10"
+ktorClientContentNegotiation = "2.3.10"
+ktorClientCore = "2.3.10"
+ktorClientLogging = "2.3.10"
+ktorSerializationKotlinxJson = "2.3.10"
 lifecycleRuntimeKtx = "2.9.0"
 activityCompose = "1.10.1"
 composeBom = "2024.09.00"
 mapsCompose = "4.3.0"
+material3 = "..."
+material3Version = "1.2.1"
 navigationCompose = "2.9.0"
 navigationRuntimeAndroid = "2.9.0"
 navigationComposeJvmstubs = "2.9.0"
+playServicesAuth = "21.3.0"
 playServicesLocation = "21.3.0"
 playServicesMaps = "19.2.0"
+playServicesMapsVersion = "18.2.0"
+firebaseCrashlyticsBuildtools = "3.0.3"
 
 [libraries]
+androidx-animation = { module = "androidx.compose.animation:animation", version.ref = "animation" }
+androidx-compose-bom-v20231001 = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-material3-v121 = { module = "androidx.compose.material3:material3", version.ref = "material3Version" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -35,9 +54,19 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation-runtime-android = { group = "androidx.navigation", name = "navigation-runtime-android", version.ref = "navigationRuntimeAndroid" }
 androidx-navigation-compose-jvmstubs = { group = "androidx.navigation", name = "navigation-compose-jvmstubs", version.ref = "navigationComposeJvmstubs" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorClientCio" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorClientContentNegotiation" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientCore" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktorClientLogging" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorSerializationKotlinxJson" }
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
+material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
+play-services-maps-v1820 = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMapsVersion" }
+firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

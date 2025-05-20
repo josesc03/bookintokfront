@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.23"
+
 }
 
 android {
@@ -44,7 +46,7 @@ dependencies {
 
 
     implementation(libs.androidx.navigation.compose)
-    implementation("androidx.compose.animation:animation:1.8.1")
+    implementation(libs.androidx.animation)
     implementation( libs.hilt.android)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -55,6 +57,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.android)
+    implementation(libs.firebase.crashlytics.buildtools)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -62,11 +65,24 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(platform(libs.androidx.compose.bom))
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.play.services.auth)
+
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.logging)
+
+    implementation(libs.kotlinx.serialization.json)
 
     implementation (libs.maps.compose)
     implementation (libs.play.services.maps)
     implementation (libs.play.services.location)
-    implementation ("com.google.android.gms:play-services-maps:18.2.0")
+    implementation (libs.play.services.maps.v1820)
 
 
 }

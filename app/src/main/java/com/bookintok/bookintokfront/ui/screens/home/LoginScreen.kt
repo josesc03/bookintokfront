@@ -106,7 +106,7 @@ fun LoginScreen(navController: NavController) {
              si no tiene unas coordenadas envia a LocationScreen*/
                 navController.navigate(Screen.Location.route)},
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFB3D0BE)
+                containerColor = Color(0xFFB3D0BE),
             ),
             border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.6f)),
             modifier = Modifier.fillMaxWidth()
