@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "193681316290",
+    "project_id": "bookintok",
+    "storage_bucket": "bookintok.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:193681316290:android:aab50204b5ea1ed12c5e5b",
+        "android_client_info": {
+          "package_name": "com.bookintok.bookintokfront"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "193681316290-9j14fkb3u5qvvkllh49jiv1l663nn9ld.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5YYFLJ5bglaXCS2Z5oh_jZA72I6T31E0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "193681316290-9j14fkb3u5qvvkllh49jiv1l663nn9ld.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

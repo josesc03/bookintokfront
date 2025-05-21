@@ -2,7 +2,6 @@ package com.bookintok.bookintokfront.ui.screens.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.*
@@ -12,8 +11,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.bookintok.bookintokfront.ui.navigation.Screen
 import com.google.android.gms.maps.model.LatLng
 
 data class Province(
@@ -22,11 +25,18 @@ data class Province(
     val longitude: Double
 )
 
+@Preview(showBackground = true)
 @Composable
-fun ProvinceScreen(onPointSelected: (LatLng) -> Unit, onBack: () -> Unit) {
+fun ProvinceScreenPreview() {
+    ProvinceScreen(navController = rememberNavController())
+}
+
+@Composable
+fun ProvinceScreen(navController: NavController) {
     var selectedLocality by remember { mutableStateOf("") }
     var selectedProvince by remember { mutableStateOf<Province?>(null) }
     var showMapDialog by remember { mutableStateOf(false) }
+    var selectedPosition by remember { mutableStateOf<LatLng?>(null) }
 
     Scaffold { paddingValues ->
 
@@ -48,7 +58,16 @@ fun ProvinceScreen(onPointSelected: (LatLng) -> Unit, onBack: () -> Unit) {
                 color = Color.Black
             )
 
-            Column (modifier = Modifier.padding(horizontal = 16.dp)) {
+            Column (modifier = Modifier.padding(horizontal = 16.dp).fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center) {
+
+                Text("Para seleccionar una provincia primero tienes que seleccionar la comunidad de la misma",
+                    textAlign = TextAlign.Center,
+                    color = Color.Black.copy(alpha = 0.6f))
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 DropdownSelector(
                     label = "Selecciona una comunidad",
                     options = localidades.keys.toList(),
@@ -67,6 +86,8 @@ fun ProvinceScreen(onPointSelected: (LatLng) -> Unit, onBack: () -> Unit) {
                     emptyList()
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
                 DropdownSelector(
                     label = "Selecciona una provincia",
                     options = provinceOptions.map { it.name },
@@ -77,6 +98,8 @@ fun ProvinceScreen(onPointSelected: (LatLng) -> Unit, onBack: () -> Unit) {
                     enabled = selectedLocality.isNotEmpty(),
                 )
 
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
                     text = selectedProvince?.name?.let { "Provincia seleccionada: $it" } ?: "Selecciona una provincia para mostrar",
                     modifier = Modifier.padding(top = 16.dp),
@@ -84,8 +107,11 @@ fun ProvinceScreen(onPointSelected: (LatLng) -> Unit, onBack: () -> Unit) {
                     textAlign = TextAlign.Center
                 )
 
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Button(
-                    onClick = { if (selectedProvince != null) showMapDialog = true },
+                    onClick = { if (selectedProvince != null) showMapDialog = true
+                              selectedPosition = LatLng(selectedProvince!!.latitude, selectedProvince!!.longitude)},
                     enabled = selectedProvince != null,
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -102,8 +128,10 @@ fun ProvinceScreen(onPointSelected: (LatLng) -> Unit, onBack: () -> Unit) {
                     )
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
                 OutlinedButton(
-                    onClick = onBack,
+                    onClick = { navController.navigateUp() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xff006025)),
                     border = BorderStroke(1.dp, Color(0xff006025))
@@ -115,11 +143,14 @@ fun ProvinceScreen(onPointSelected: (LatLng) -> Unit, onBack: () -> Unit) {
 
         if (showMapDialog && selectedProvince != null) {
             MapaDialog(
-                selectedPosition = LatLng(selectedProvince!!.latitude, selectedProvince!!.longitude),
-                onDismiss = { showMapDialog = false },
+                selectedPosition = selectedPosition!!,
+                onDismiss = { selectedPosition = null },
                 onPointSelected = {
-                    onPointSelected(it)
-                    showMapDialog = false
+                    updateLocation(latlng = it, onSuccess = {
+                        navController.navigate(Screen.Main.route)
+                    }, onError = {
+                        selectedPosition = null
+                    })
                 }
             )
         }

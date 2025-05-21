@@ -13,7 +13,6 @@ import com.bookintok.bookintokfront.ui.screens.home.MainScreen
 import com.bookintok.bookintokfront.ui.screens.home.PointScreen
 import com.bookintok.bookintokfront.ui.screens.home.ProvinceScreen
 import com.bookintok.bookintokfront.ui.screens.home.RegisterScreen
-import com.bookintok.bookintokfront.ui.screens.home.SplashScreen
 
 @Composable
 fun AppNavigation() {
@@ -21,11 +20,8 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route
+        startDestination = Screen.Home.route
     ) {
-        composable(route = Screen.Splash.route){
-            SplashScreen(navController = navController)
-        }
         composable(
             route = Screen.Home.route,
             exitTransition = {
@@ -53,36 +49,17 @@ fun AppNavigation() {
         }
 
         composable(Screen.Location.route) {
-            LocationScreen(navController = navController,
-                onPointSelected = { point ->
-                    navController.navigate(Screen.Main.route)
-                })
+            LocationScreen(navController = navController)
         }
         composable(Screen.Point.route) {
-            PointScreen(
-                onPointSelected = { point ->
-                    navController.navigate(Screen.Main.route)
-                },
-                onBack = {
-                    navController.navigateUp()
-                }
-            )
+            PointScreen(navController = navController)
         }
         composable(Screen.Province.route) {
-            ProvinceScreen(
-                onPointSelected = { point ->
-                    navController.navigate(Screen.Main.route)
-                },
-                onBack = {
-                    navController.navigateUp()
-                }
-            )
+            ProvinceScreen(navController = navController)
         }
 
         composable(Screen.Main.route) {
-            MainScreen(
-                navController = navController
-            )
+            MainScreen(navController = navController)
         }
     }
 }

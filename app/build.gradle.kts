@@ -2,8 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.23"
-
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.10"
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -43,8 +43,6 @@ android {
 
 dependencies {
 
-
-
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.animation)
     implementation( libs.hilt.android)
@@ -68,6 +66,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
 
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.play.services.auth)
 

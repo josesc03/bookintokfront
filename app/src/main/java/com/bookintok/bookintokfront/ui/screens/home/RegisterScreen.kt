@@ -2,6 +2,7 @@ package com.bookintok.bookintokfront.ui.screens.home
 
 import android.net.http.HttpResponseCache.install
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,11 +30,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.bookintok.bookintokfront.R
 import com.bookintok.bookintokfront.ui.navigation.Screen
 import com.google.firebase.auth.FirebaseAuth
 import io.ktor.client.HttpClient
@@ -53,6 +59,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+
+@Preview(showBackground = true)
+@Composable
+fun RegisterScreenPreview() {
+    RegisterScreen(navController = rememberNavController())
+}
 
 @Composable
 fun RegisterScreen(navController: NavController) {
@@ -164,10 +176,14 @@ fun RegisterScreen(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        imageVector = Icons.Default.ThumbUp,
-                        contentDescription = if (passwordVisible) "Hide Password" else "Show Password"
+                IconButton (onClick = { passwordVisible = !passwordVisible }) {
+                    Image(
+                        painter = if (passwordVisible)
+                            painterResource(id = R.drawable.visible)
+                        else
+                            painterResource(id = R.drawable.visible_off),
+                        contentDescription = if (passwordVisible) "Hide Password" else "Show Password",
+                        colorFilter = ColorFilter.tint(Color(0xFF7AA289).copy(alpha = .6f))
                     )
                 }
             }
@@ -203,10 +219,14 @@ fun RegisterScreen(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                    Icon(
-                        imageVector = Icons.Default.ThumbUp,
-                        contentDescription = if (confirmPasswordVisible) "Hide Password" else "Show Password"
+                IconButton (onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                    Image(
+                        painter = if (confirmPasswordVisible)
+                            painterResource(id = R.drawable.visible)
+                        else
+                            painterResource(id = R.drawable.visible_off),
+                        contentDescription = if (confirmPasswordVisible) "Hide Password" else "Show Password",
+                        colorFilter = ColorFilter.tint(Color(0xFF7AA289).copy(alpha = .6f))
                     )
                 }
             }
@@ -233,7 +253,9 @@ fun RegisterScreen(navController: NavController) {
                     return@Button
                 }
 
-                registerUser(username, email, password, navController)
+                registerUser(username, email, password, navController) {
+                    error -> errorMessage = error
+                }
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFB3D0BE)
@@ -242,18 +264,6 @@ fun RegisterScreen(navController: NavController) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("REGISTRATE", color = Color.Black.copy(alpha = 0.6f))
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { /* Enviar al LoginScreen si el registro es exitoso */ },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFB3D0BE)
-            ),
-            border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.6f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("REGISTRATE CON GOOGLE", color = Color.Black.copy(alpha = 0.6f))
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -293,9 +303,8 @@ fun registerUser(
                     ?.addOnSuccessListener { result ->
                         val idToken = result.token
                         if (idToken != null) {
-                            // Llamada a tu backend para crear el usuario en tu base de datos
-                            createUserInBackend(idToken, username, onSuccess = {
-                                navController.navigate(Screen.Home.route)
+                            createUserInBackend(idToken, username, email, onSuccess = {
+                                navController.navigate(Screen.Login.route)
                             }, onError = {
                                 onError("Error al registrar en el backend: $it")
                             })
@@ -315,6 +324,7 @@ fun registerUser(
 fun createUserInBackend(
     idToken: String,
     username: String,
+    email: String,
     onSuccess: () -> Unit,
     onError: (String) -> Unit
 ) {
@@ -326,11 +336,13 @@ fun createUserInBackend(
 
     CoroutineScope(Dispatchers.IO).launch {
         try {
-            val response: HttpResponse = client.post("https://10.0.2.2:8080/usuarios") {
-                //val response: HttpResponse = client.post("https://192.168.1.23:8080/usuarios") {
+            val response: HttpResponse = client.post("http://10.0.2.2:8080/register") {
+                //val response: HttpResponse = client.post("http://192.168.1.23:8080/register") {
                     header("Authorization", "Bearer $idToken")
                     contentType(ContentType.Application.Json)
-                    setBody(mapOf("username" to username))
+                    setBody(mapOf(
+                        "username" to username,
+                        "email" to email))
             }
 
             if (response.status.isSuccess()) {
@@ -352,4 +364,3 @@ fun createUserInBackend(
         }
     }
 }
-

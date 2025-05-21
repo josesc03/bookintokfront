@@ -33,15 +33,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.bookintok.bookintokfront.ui.navigation.Screen
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.auth.FirebaseAuth
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
@@ -49,9 +52,32 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+
+@Preview(showBackground = true)
+@Composable
+fun LocationScreenPreview() {
+    LocationScreen(navController = rememberNavController())
+}
 
 @Composable
-fun LocationScreen(navController: NavHostController, onPointSelected: (LatLng) -> Unit) {
+fun LocationScreen(navController: NavHostController) {
     val context = LocalContext.current
 
     var hasLocationPermission by remember {
@@ -208,7 +234,13 @@ fun LocationScreen(navController: NavHostController, onPointSelected: (LatLng) -
                 MapaDialog(
                     selectedPosition = selectedPosition!!,
                     onDismiss = { selectedPosition = null },
-                    onPointSelected = onPointSelected
+                    onPointSelected = {
+                        updateLocation(latlng = it, onSuccess = {
+                            navController.navigate(Screen.Main.route)
+                        }, onError = {
+                            selectedPosition = null
+                        })
+                    }
                 )
             }
         }
@@ -298,4 +330,68 @@ fun MapaDialog(
             }
         }
     }
+}
+
+fun updateLocation(
+    latlng: LatLng?,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json { ignoreUnknownKeys = true })
+        }
+    }
+
+    val latitud = latlng?.latitude
+    val longitud = latlng?.longitude
+
+    val user = FirebaseAuth.getInstance().currentUser
+    if (user == null) {
+        onError("Usuario no autenticado")
+        return
+    }
+
+    user.getIdToken(true)
+        .addOnSuccessListener { result ->
+            val idToken = result.token
+            if (idToken == null) {
+                onError("No se pudo obtener el token de Firebase")
+                return@addOnSuccessListener
+            }
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response: HttpResponse = client.post("http://10.0.2.2:8080/update-location") {
+                        //val response: HttpResponse = client.post("http://192.168.1.23:8080/update-location") {
+                        header("Authorization", "Bearer $idToken")
+                        contentType(ContentType.Application.Json)
+                        setBody(mapOf(
+                            "latitud" to latitud,
+                            "longitud" to longitud))
+                    }
+
+
+                    if (response.status.isSuccess()) {
+                        withContext(Dispatchers.Main) {
+                            onSuccess()
+                        }
+                    } else {
+                        val errorBody = response.bodyAsText()
+                        withContext(Dispatchers.Main) {
+                            onError("Error HTTP ${response.status.value}: $errorBody")
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        onError("Excepción: ${e.localizedMessage}")
+                    }
+                } finally {
+                    client.close()
+                }
+            }
+        }
+        .addOnFailureListener { exception ->
+            onError("Error al obtener token: ${exception.localizedMessage}")
+        }
 }
