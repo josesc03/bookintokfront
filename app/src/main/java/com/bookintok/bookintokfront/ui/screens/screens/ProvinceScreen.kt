@@ -1,4 +1,4 @@
-package com.bookintok.bookintokfront.ui.screens.home
+package com.bookintok.bookintokfront.ui.screens.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -172,7 +172,7 @@ fun DropdownSelector(
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
+        onExpandedChange = { if (enabled) expanded = !expanded },
         modifier = modifier,
     ) {
         OutlinedTextField(

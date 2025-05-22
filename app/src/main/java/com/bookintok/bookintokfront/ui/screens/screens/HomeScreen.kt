@@ -1,4 +1,4 @@
-package com.bookintok.bookintokfront.ui.screens.home
+package com.bookintok.bookintokfront.ui.screens.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background

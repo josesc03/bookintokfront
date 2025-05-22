@@ -6,13 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.bookintok.bookintokfront.ui.screens.home.HomeScreen
-import com.bookintok.bookintokfront.ui.screens.home.LocationScreen
-import com.bookintok.bookintokfront.ui.screens.home.LoginScreen
-import com.bookintok.bookintokfront.ui.screens.home.MainScreen
-import com.bookintok.bookintokfront.ui.screens.home.PointScreen
-import com.bookintok.bookintokfront.ui.screens.home.ProvinceScreen
-import com.bookintok.bookintokfront.ui.screens.home.RegisterScreen
+import com.bookintok.bookintokfront.ui.screens.screens.HomeScreen
+import com.bookintok.bookintokfront.ui.screens.screens.LocationScreen
+import com.bookintok.bookintokfront.ui.screens.screens.LoginScreen
+import com.bookintok.bookintokfront.ui.screens.screens.MainScreen
+import com.bookintok.bookintokfront.ui.screens.screens.PointScreen
+import com.bookintok.bookintokfront.ui.screens.screens.ProvinceScreen
+import com.bookintok.bookintokfront.ui.screens.screens.RegisterScreen
 
 @Composable
 fun AppNavigation() {
@@ -39,7 +39,6 @@ fun AppNavigation() {
         ) {
             HomeScreen(navController = navController)
         }
-
 
         composable(Screen.Login.route) {
             LoginScreen(navController = navController)

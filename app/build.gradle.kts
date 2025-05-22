@@ -45,7 +45,7 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.animation)
-    implementation( libs.hilt.android)
+    implementation(libs.hilt.android)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -70,6 +70,8 @@ dependencies {
     implementation(libs.firebase.auth.ktx)
     implementation(libs.play.services.auth)
 
+    implementation(libs.coil.compose)
+
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
@@ -78,10 +80,10 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
-    implementation (libs.maps.compose)
-    implementation (libs.play.services.maps)
-    implementation (libs.play.services.location)
-    implementation (libs.play.services.maps.v1820)
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.maps.v1820)
 
 
 }

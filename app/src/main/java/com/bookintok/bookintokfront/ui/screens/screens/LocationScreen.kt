@@ -1,4 +1,4 @@
-package com.bookintok.bookintokfront.ui.screens.home
+package com.bookintok.bookintokfront.ui.screens.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -9,13 +9,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -32,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +40,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.bookintok.bookintokfront.R
 import com.bookintok.bookintokfront.ui.navigation.Screen
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
@@ -169,11 +170,13 @@ fun LocationScreen(navController: NavHostController) {
                     border = BorderStroke(
                         width = 1.dp,
                         color = Color.Black.copy(alpha = 0.6f)
-                    )
+                    ),
+                    contentPadding = PaddingValues(10.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.ThumbUp,
-                        contentDescription = "Thumb Up Icon",
+                        modifier = Modifier.fillMaxSize(),
+                        painter = painterResource(id = R.drawable.location),
+                        contentDescription = "Location Icon",
                         tint = Color.Black.copy(alpha = 0.4f)
                     )
                 }
