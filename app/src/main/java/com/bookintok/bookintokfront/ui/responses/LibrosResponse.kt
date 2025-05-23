@@ -4,7 +4,7 @@ import com.bookintok.bookintokfront.ui.model.Libro
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class LibroResponse(
+data class LibrosResponse(
     val status: String,
-    val libro: Libro
+    val libros: List<Libro> = emptyList()
 )

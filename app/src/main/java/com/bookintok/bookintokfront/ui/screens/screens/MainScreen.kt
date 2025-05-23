@@ -59,6 +59,7 @@ import coil.compose.AsyncImage
 import com.bookintok.bookintokfront.R
 import com.bookintok.bookintokfront.ui.model.Libro
 import com.bookintok.bookintokfront.ui.navigation.Screen
+import com.bookintok.bookintokfront.ui.responses.LibrosResponse
 import com.google.firebase.auth.FirebaseAuth
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -116,7 +117,7 @@ fun MainScreen(navController: NavHostController) {
     }
 
     Scaffold { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -128,275 +129,307 @@ fun MainScreen(navController: NavHostController) {
                 }
         ) {
 
-            Text(
-                text = "BOOKINTOK",
+            Box(
                 modifier = Modifier
                     .background(Color(0xffb3d0be))
                     .fillMaxWidth()
-                    .padding(24.dp),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Black
-            )
+                    .height(72.dp)
+                    .align(Alignment.TopCenter),
+                contentAlignment = Alignment.Center
+            ) {
 
-            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "BOOKINTOK",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Black,
+                )
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(5.dp))
-                        .background(Color(0xfff5f5f5))
-                        .border(
-                            shape = RoundedCornerShape(5.dp),
-                            border = BorderStroke(1.dp, Color.Black.copy(alpha = .6f))
-                        ),
-                    verticalArrangement = Arrangement.Top
-                ) {
-                    OutlinedTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        placeholder = { Text("Buscar...", color = Color.Black.copy(alpha = .6f)) },
+            }
+
+            Column {
+
+                Spacer(modifier = Modifier.height(72.dp))
+
+                Column(modifier = Modifier.padding(16.dp)) {
+
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .onFocusChanged { focusState ->
-                                if (focusState.isFocused) filtersVisible = true
-                            },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search Icon",
-                                tint = Color.Black.copy(alpha = .6f)
-                            )
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color(0xFF1A1A1A),
-                            unfocusedTextColor = Color(0xFF1A1A1A),
-                            focusedContainerColor = Color(0xFFf5f5f5),
-                            unfocusedContainerColor = Color(0xFFf5f5f5),
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedLabelColor = Color.Transparent,
-                            unfocusedLabelColor = Color.Transparent,
-                            cursorColor = Color(0xFF7AA289),
-                        ),
-                        singleLine = true,
-
-                        )
-
-                    AnimatedVisibility(
-                        visible = filtersVisible,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp, start = 12.dp, end = 12.dp)
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(Color(0xfff5f5f5))
+                            .border(
+                                shape = RoundedCornerShape(5.dp),
+                                border = BorderStroke(1.dp, Color.Black.copy(alpha = .6f))
+                            ),
+                        verticalArrangement = Arrangement.Top
                     ) {
-                        Column(
+                        OutlinedTextField(
+                            value = query,
+                            onValueChange = { query = it },
+                            placeholder = {
+                                Text(
+                                    "Buscar...",
+                                    color = Color.Black.copy(alpha = .6f)
+                                )
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.White, RoundedCornerShape(5.dp))
-                                .padding(16.dp)
+                                .onFocusChanged { focusState ->
+                                    if (focusState.isFocused) filtersVisible = true
+                                },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search Icon",
+                                    tint = Color.Black.copy(alpha = .6f)
+                                )
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color(0xFF1A1A1A),
+                                unfocusedTextColor = Color(0xFF1A1A1A),
+                                focusedContainerColor = Color(0xFFf5f5f5),
+                                unfocusedContainerColor = Color(0xFFf5f5f5),
+                                focusedBorderColor = Color.Transparent,
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedLabelColor = Color.Transparent,
+                                unfocusedLabelColor = Color.Transparent,
+                                cursorColor = Color(0xFF7AA289),
+                            ),
+                            singleLine = true,
+
+                            )
+
+                        AnimatedVisibility(
+                            visible = filtersVisible,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp, start = 12.dp, end = 12.dp)
                         ) {
-                            Text(
-                                "Distancia",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.Black
-                            )
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color.White, RoundedCornerShape(5.dp))
+                                    .padding(16.dp)
+                            ) {
+                                Text(
+                                    "Distancia",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.Black
+                                )
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                            Text(
-                                text = "${distancia_selected.toInt()} km",
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Black.copy(alpha = 0.8f)
-                            )
+                                Text(
+                                    text = "${distancia_selected.toInt()} km",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Black.copy(alpha = 0.8f)
+                                )
 
-                            Slider(
-                                value = distancia_selected,
-                                onValueChange = { distancia_selected = it },
-                                valueRange = 1f..500f,
-                                modifier = Modifier.weight(1f)
-                            )
-
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Text(
-                                "Generos",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.Black
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            DropdownSelector(
-                                label = "Genero principal",
-                                options = generos.map { it },
-                                selectedOption = genero_principal,
-                                onOptionSelected = {
-                                    genero_principal = it
-                                },
-                                enabled = true,
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            DropdownSelector(
-                                label = "Genero secundario",
-                                options = generos.filter { it != genero_principal },
-                                selectedOption = genero_secundario,
-                                onOptionSelected = {
-                                    genero_secundario = it
-                                },
-                                enabled = genero_principal.isNotEmpty(),
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Text(
-                                "Idioma",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.Black
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            DropdownSelector(
-                                label = "Idioma",
-                                options = idiomas.map { it },
-                                selectedOption = idioma_selected,
-                                onOptionSelected = {
-                                    idioma_selected = it
-                                },
-                                enabled = true,
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Text(
-                                "Estado",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.Black
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
+                                Slider(
+                                    value = distancia_selected,
+                                    onValueChange = { distancia_selected = it },
+                                    valueRange = 1f..500f,
+                                    modifier = Modifier.weight(1f)
+                                )
 
 
-                            Row {
-                                listOf("Como nuevo", "Usado", "Antiguo").forEach { estado ->
-                                    FilterChip(
-                                        selected = estado_selected == estado,
-                                        onClick = { estado_selected = estado },
-                                        label = { Text(estado) },
-                                        modifier = Modifier.padding(end = 8.dp),
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = Color(0xffb3d0be)
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text(
+                                    "Generos",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.Black
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                DropdownSelector(
+                                    label = "Genero principal",
+                                    options = generos.map { it },
+                                    selectedOption = genero_principal,
+                                    onOptionSelected = {
+                                        genero_principal = it
+                                    },
+                                    enabled = true,
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                DropdownSelector(
+                                    label = "Genero secundario",
+                                    options = generos.filter { it != genero_principal },
+                                    selectedOption = genero_secundario,
+                                    onOptionSelected = {
+                                        genero_secundario = it
+                                    },
+                                    enabled = genero_principal.isNotEmpty(),
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text(
+                                    "Idioma",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.Black
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                DropdownSelector(
+                                    label = "Idioma",
+                                    options = idiomas.map { it },
+                                    selectedOption = idioma_selected,
+                                    onOptionSelected = {
+                                        idioma_selected = it
+                                    },
+                                    enabled = true,
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text(
+                                    "Estado",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.Black
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+
+                                Row {
+                                    listOf("Como nuevo", "Usado", "Antiguo").forEach { estado ->
+                                        FilterChip(
+                                            selected = estado_selected == estado,
+                                            onClick = { estado_selected = estado },
+                                            label = { Text(estado) },
+                                            modifier = Modifier.padding(end = 8.dp),
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = Color(0xffb3d0be)
+                                            )
                                         )
+                                    }
+                                }
+
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text(
+                                    "Cubierta",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.Black
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row {
+                                    listOf("Tapa dura", "Tapa blanda").forEach { cubierta ->
+                                        FilterChip(
+                                            selected = cubierta_selected == cubierta,
+                                            onClick = { cubierta_selected = cubierta },
+                                            label = { Text(cubierta) },
+                                            modifier = Modifier.padding(end = 8.dp),
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = Color(0xffb3d0be)
+                                            )
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(32.dp))
+
+                                Button(
+                                    onClick = {
+                                        filtersVisible = false
+                                    },
+                                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                                    border = BorderStroke(
+                                        width = 1.dp,
+                                        color = Color.Black.copy(alpha = 0.6f)
                                     )
+                                ) {
+                                    Text("Buscar")
                                 }
                             }
+                        }
+                    }
 
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "LISTADO DE LIBROS",
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
+                    )
 
-                            Text(
-                                "Cubierta",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.Black
-                            )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Row {
-                                listOf("Tapa dura", "Tapa blanda").forEach { cubierta ->
-                                    FilterChip(
-                                        selected = cubierta_selected == cubierta,
-                                        onClick = { cubierta_selected = cubierta },
-                                        label = { Text(cubierta) },
-                                        modifier = Modifier.padding(end = 8.dp),
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = Color(0xffb3d0be)
-                                        )
-                                    )
+                    if (error != null) {
+                        Text("Error: $error", color = Color.Red)
+                    } else {
+                        if (libros.isEmpty()) {
+                            Text("No se encontraron libros.")
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                items(libros) {
+                                    LibroCard(it)
+                                    Spacer(modifier = Modifier.height(8.dp))
                                 }
                             }
+                        }
+                    }
+                }
 
-                            Spacer(modifier = Modifier.height(32.dp))
+            }
 
+
+            if (!filtersVisible) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xffe6f0ea))
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("¿Quieres cambiar tu ubicación?")
+                            Spacer(modifier = Modifier.height(8.dp))
                             Button(
                                 onClick = {
-                                    filtersVisible = false
+                                    navController.navigate(Screen.Location.route)
                                 },
-                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xffb3d0be)
+                                ),
                                 border = BorderStroke(
                                     width = 1.dp,
                                     color = Color.Black.copy(alpha = 0.6f)
                                 )
                             ) {
-                                Text("Buscar")
+                                Icon(
+                                    painter = painterResource(id = R.drawable.map),
+                                    contentDescription = "Location Icon",
+                                    tint = Color.Black.copy(alpha = 0.4f)
+                                )
                             }
                         }
+
+                        MenuInferior(navController = navController)
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = "LISTADO DE LIBROS",
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (error != null) {
-                    Text("Error: $error", color = Color.Red)
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(vertical = 8.dp)
-                    ) {
-                        items(libros) {
-                            LibroCard(it)
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                    }
-                }
-
             }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xffe6f0ea))
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("¿Quieres cambiar tu ubicación?")
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = {
-                        navController.navigate(Screen.Location.route)
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xffb3d0be)
-                    ),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = Color.Black.copy(alpha = 0.6f)
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.map),
-                        contentDescription = "Location Icon",
-                        tint = Color.Black.copy(alpha = 0.4f)
-                    )
-                }
-            }
-
-            MenuInferior(navController = navController)
 
         }
     }
@@ -596,18 +629,19 @@ fun getLibrosFromApi(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response: HttpResponse = client.get("http://10.0.2.2:8080/allLibros") {
+                val response: HttpResponse = client.get("http://10.0.2.2:8080/libro/allLibros") {
                     header("Authorization", "Bearer $idToken")
                 }
 
                 if (response.status.isSuccess()) {
-                    val libros = response.body<List<Libro>>()
+                    val libros = response.body<LibrosResponse>()
                     withContext(Dispatchers.Main) {
-                        onSuccess(libros)
+                        onSuccess(libros.libros)
                     }
                 } else {
                     val errorBody = response.bodyAsText()
                     withContext(Dispatchers.Main) {
+                        println("Error HTTP ${response.status.value}: $errorBody")
                         onError("Error HTTP ${response.status.value}: $errorBody")
                     }
                 }
