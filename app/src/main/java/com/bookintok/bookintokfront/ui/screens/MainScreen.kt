@@ -1,4 +1,4 @@
-package com.bookintok.bookintokfront.ui.screens.screens
+package com.bookintok.bookintokfront.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -53,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
@@ -84,31 +85,46 @@ fun MainScreenPreview() {
 }
 
 @Composable
-fun MainScreen(navController: NavHostController) {
+fun MainScreen(navController: NavController) {
     var libros by remember { mutableStateOf<List<Libro>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    var query by remember { mutableStateOf("") }
     var filtersVisible by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
 
-    var genero_principal by remember { mutableStateOf("") }
-    var genero_secundario by remember { mutableStateOf("") }
+    var query by remember { mutableStateOf("") }
+    var categoriaPrincipal by remember { mutableStateOf("") }
+    var categoriaSecundaria by remember { mutableStateOf("") }
 
-    var idioma_selected by remember { mutableStateOf("") }
+    var idiomaSelected by remember { mutableStateOf("") }
 
-    var estado_selected by remember { mutableStateOf("") }
+    var estadoSelected by remember { mutableStateOf("") }
 
-    var cubierta_selected by remember { mutableStateOf("") }
+    var cubiertaSelected by remember { mutableStateOf("") }
 
-    var distancia_selected by remember { mutableStateOf(1f) }
+    var distanciaSelected by remember { mutableStateOf(0f) }
+
+    fun getAppliedFilters(): Map<String, Any> {
+        val filtersMap = mutableMapOf<String, Any>()
+        if (query.isNotBlank()) filtersMap["busqueda"] = query
+        if (distanciaSelected > 0f) filtersMap["distancia"] = distanciaSelected.toInt()
+        if (categoriaPrincipal.isNotBlank()) filtersMap["categoriaPrincipal"] = categoriaPrincipal
+        if (categoriaSecundaria.isNotBlank()) filtersMap["categoriaSecundaria"] = categoriaSecundaria
+        if (idiomaSelected.isNotBlank()) filtersMap["idioma"] = idiomaSelected
+        if (estadoSelected.isNotBlank()) filtersMap["estado"] = estadoSelected
+        if (cubiertaSelected.isNotBlank()) filtersMap["cubierta"] = cubiertaSelected
+        return filtersMap
+    }
 
     LaunchedEffect(Unit) {
         getLibrosFromApi(
             onSuccess = { libros = it },
-            onError = { error = it }
+            onError = { error = it },
+            filters = getAppliedFilters()
         )
+
+        println(getAppliedFilters())
     }
 
     BackHandler(filtersVisible) {
@@ -221,7 +237,7 @@ fun MainScreen(navController: NavHostController) {
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = "${distancia_selected.toInt()} km",
+                                    text = if (distanciaSelected == 0f) "Distancia desactivada" else "${distanciaSelected.toInt()}km",
                                     modifier = Modifier.fillMaxWidth(),
                                     textAlign = TextAlign.Center,
                                     style = MaterialTheme.typography.bodyMedium,
@@ -229,9 +245,9 @@ fun MainScreen(navController: NavHostController) {
                                 )
 
                                 Slider(
-                                    value = distancia_selected,
-                                    onValueChange = { distancia_selected = it },
-                                    valueRange = 1f..500f,
+                                    value = distanciaSelected,
+                                    onValueChange = { distanciaSelected = it },
+                                    valueRange = 0f..500f,
                                     modifier = Modifier.weight(1f)
                                 )
 
@@ -249,9 +265,9 @@ fun MainScreen(navController: NavHostController) {
                                 DropdownSelector(
                                     label = "Genero principal",
                                     options = generos.map { it },
-                                    selectedOption = genero_principal,
+                                    selectedOption = categoriaPrincipal,
                                     onOptionSelected = {
-                                        genero_principal = it
+                                        categoriaPrincipal = it
                                     },
                                     enabled = true,
                                 )
@@ -260,12 +276,12 @@ fun MainScreen(navController: NavHostController) {
 
                                 DropdownSelector(
                                     label = "Genero secundario",
-                                    options = generos.filter { it != genero_principal },
-                                    selectedOption = genero_secundario,
+                                    options = generos.filter { it != categoriaPrincipal },
+                                    selectedOption = categoriaSecundaria,
                                     onOptionSelected = {
-                                        genero_secundario = it
+                                        categoriaSecundaria = it
                                     },
-                                    enabled = genero_principal.isNotEmpty(),
+                                    enabled = categoriaPrincipal.isNotEmpty(),
                                 )
 
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -281,9 +297,9 @@ fun MainScreen(navController: NavHostController) {
                                 DropdownSelector(
                                     label = "Idioma",
                                     options = idiomas.map { it },
-                                    selectedOption = idioma_selected,
+                                    selectedOption = idiomaSelected,
                                     onOptionSelected = {
-                                        idioma_selected = it
+                                        idiomaSelected = it
                                     },
                                     enabled = true,
                                 )
@@ -302,8 +318,8 @@ fun MainScreen(navController: NavHostController) {
                                 Row {
                                     listOf("Como nuevo", "Usado", "Antiguo").forEach { estado ->
                                         FilterChip(
-                                            selected = estado_selected == estado,
-                                            onClick = { estado_selected = estado },
+                                            selected = estadoSelected == estado,
+                                            onClick = { estadoSelected = estado },
                                             label = { Text(estado) },
                                             modifier = Modifier.padding(end = 8.dp),
                                             colors = FilterChipDefaults.filterChipColors(
@@ -327,8 +343,8 @@ fun MainScreen(navController: NavHostController) {
                                 Row {
                                     listOf("Tapa dura", "Tapa blanda").forEach { cubierta ->
                                         FilterChip(
-                                            selected = cubierta_selected == cubierta,
-                                            onClick = { cubierta_selected = cubierta },
+                                            selected = cubiertaSelected == cubierta,
+                                            onClick = { cubiertaSelected = cubierta },
                                             label = { Text(cubierta) },
                                             modifier = Modifier.padding(end = 8.dp),
                                             colors = FilterChipDefaults.filterChipColors(
@@ -343,6 +359,11 @@ fun MainScreen(navController: NavHostController) {
                                 Button(
                                     onClick = {
                                         filtersVisible = false
+                                        getLibrosFromApi(
+                                            onSuccess = { libros = it },
+                                            onError = { error = it },
+                                            filters = getAppliedFilters()
+                                        )
                                     },
                                     modifier = Modifier.align(Alignment.CenterHorizontally),
                                     border = BorderStroke(
@@ -360,7 +381,7 @@ fun MainScreen(navController: NavHostController) {
 
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "LISTADO DE LIBROS",
+                        text = if (getAppliedFilters().isEmpty()) "LISTADO DE LIBROS" else "LIBROS FILTRADOS",
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )
@@ -468,7 +489,23 @@ fun LibroCard(libro: Libro) {
 }
 
 @Composable
-fun MenuInferior(navController: NavHostController) {
+fun MenuInferior(navController: NavController, index: Int = 0) {
+
+    var explorerColor: Color = Color(0xffb3d0be)
+    var chatsColor: Color = Color(0xffb3d0be)
+    var userColor: Color = Color(0xffb3d0be)
+
+    when (index) {
+        0 -> {
+            explorerColor = Color(0xffd7d7d7)
+        }
+        1 -> {
+            chatsColor = Color(0xffd7d7d7)
+        }
+        2 -> {
+            userColor = Color(0xffd7d7d7)
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -479,7 +516,7 @@ fun MenuInferior(navController: NavHostController) {
     ) {
         Box(
             modifier = Modifier
-                .background(Color(0xffb3d0be))
+                .background(explorerColor)
                 .weight(1f)
                 .fillMaxHeight()
                 .clickable(enabled = true, onClick = {
@@ -497,9 +534,12 @@ fun MenuInferior(navController: NavHostController) {
             modifier = Modifier
                 .background(Color.Black.copy(alpha = .6f))
                 .padding(horizontal = 1.dp)
-                .background(Color(0xffb3d0be))
+                .background(chatsColor)
                 .weight(1f)
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .clickable(enabled = true, onClick = {
+                    navController.navigate(Screen.Chats.route)
+                }),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -510,9 +550,12 @@ fun MenuInferior(navController: NavHostController) {
         }
         Box(
             modifier = Modifier
-                .background(Color(0xffb3d0be))
+                .background(userColor)
                 .weight(1f)
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .clickable(enabled = true, onClick = {
+                    navController.navigate(Screen.ProfilePage.route)
+                }),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -606,7 +649,8 @@ val idiomas = listOf(
 
 fun getLibrosFromApi(
     onSuccess: (List<Libro>) -> Unit,
-    onError: (String) -> Unit = {}
+    onError: (String) -> Unit = {},
+    filters: Map<String, Any>? = null
 ) {
     val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -629,8 +673,15 @@ fun getLibrosFromApi(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response: HttpResponse = client.get("http://10.0.2.2:8080/libro/allLibros") {
+                var url = "http://10.0.2.2:8080/libro/allLibros"
+                filters?.let {
+                    val queryParams = it.map { (key, value) -> "$key=$value" }.joinToString("&")
+                    if (queryParams.isNotEmpty()) url += "?$queryParams"
+                }
+
+                val response: HttpResponse = client.get(url) {
                     header("Authorization", "Bearer $idToken")
+                    println("Requesting URL: $url with token: $idToken")
                 }
 
                 if (response.status.isSuccess()) {

@@ -8,6 +8,8 @@ sealed class Screen(val route: String) {
     object Location : Screen("location")
     object Point : Screen("point")
     object Province : Screen("province")
+    object ProfilePage : Screen("profile/{userUid}")
+    object Chats : Screen("chats")
 
     // TODO: DEMAS PANTALLAS
 }

@@ -1,19 +1,24 @@
 package com.bookintok.bookintokfront.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.bookintok.bookintokfront.ui.screens.screens.HomeScreen
-import com.bookintok.bookintokfront.ui.screens.screens.LocationScreen
-import com.bookintok.bookintokfront.ui.screens.screens.LoginScreen
-import com.bookintok.bookintokfront.ui.screens.screens.MainScreen
-import com.bookintok.bookintokfront.ui.screens.screens.PointScreen
-import com.bookintok.bookintokfront.ui.screens.screens.ProvinceScreen
-import com.bookintok.bookintokfront.ui.screens.screens.RegisterScreen
+import com.bookintok.bookintokfront.ui.screens.ChatsScreen
+import com.bookintok.bookintokfront.ui.screens.HomeScreen
+import com.bookintok.bookintokfront.ui.screens.LocationScreen
+import com.bookintok.bookintokfront.ui.screens.LoginScreen
+import com.bookintok.bookintokfront.ui.screens.MainScreen
+import com.bookintok.bookintokfront.ui.screens.PointScreen
+import com.bookintok.bookintokfront.ui.screens.ProfileScreen
+import com.bookintok.bookintokfront.ui.screens.ProvinceScreen
+import com.bookintok.bookintokfront.ui.screens.RegisterScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -56,9 +61,16 @@ fun AppNavigation() {
         composable(Screen.Province.route) {
             ProvinceScreen(navController = navController)
         }
-
         composable(Screen.Main.route) {
             MainScreen(navController = navController)
+        }
+        composable(Screen.ProfilePage.route) {
+            val userUid = it.arguments?.getString("userUid")
+            requireNotNull(userUid) { "El userId es obligatorio" }
+            ProfileScreen(navController = navController, userUid)
+        }
+        composable(Screen.ProfilePage.route) {
+            ChatsScreen(navController = navController)
         }
     }
 }

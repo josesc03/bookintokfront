@@ -1,4 +1,4 @@
-package com.bookintok.bookintokfront.ui.screens.screens
+package com.bookintok.bookintokfront.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -33,7 +33,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bookintok.bookintokfront.ui.navigation.Screen
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
     var sliderValue by remember { mutableFloatStateOf(0f) }

@@ -7,7 +7,7 @@ import java.math.BigDecimal
 import kotlin.time.ExperimentalTime
 
 @Serializable
-data class Usuario @OptIn(ExperimentalTime::class) constructor(
+data class Usuario (
     val uid: String,
     val nickname: String,
     val nombre: String,

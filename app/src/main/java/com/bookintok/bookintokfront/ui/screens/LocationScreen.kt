@@ -1,4 +1,4 @@
-package com.bookintok.bookintokfront.ui.screens.screens
+package com.bookintok.bookintokfront.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager

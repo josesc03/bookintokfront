@@ -17,7 +17,7 @@ enum class TipoCubierta {
 }
 
 @Serializable
-data class Libro @OptIn(ExperimentalTime::class) constructor(
+data class Libro (
     val id: Int,
     val idUsuario: Int,
     val titulo: String,

@@ -1,4 +1,4 @@
-package com.bookintok.bookintokfront.ui.screens.screens
+package com.bookintok.bookintokfront.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
