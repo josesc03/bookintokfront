@@ -5,9 +5,12 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.bookintok.bookintokfront.ui.screens.BookEditScreen
 import com.bookintok.bookintokfront.ui.screens.ChatsScreen
 import com.bookintok.bookintokfront.ui.screens.HomeScreen
 import com.bookintok.bookintokfront.ui.screens.LocationScreen
@@ -64,13 +67,33 @@ fun AppNavigation() {
         composable(Screen.Main.route) {
             MainScreen(navController = navController)
         }
-        composable(Screen.ProfilePage.route) {
-            val userUid = it.arguments?.getString("userUid")
-            requireNotNull(userUid) { "El userId es obligatorio" }
-            ProfileScreen(navController = navController, userUid)
+        composable(Screen.ProfilePage.route, arguments = listOf(navArgument("userUid") {
+            type = NavType.StringType
+        })) {
+            ProfileScreen(
+                navController = navController,
+                uid = it.arguments?.getString("userUid") ?: ""
+            )
         }
-        composable(Screen.ProfilePage.route) {
-            ChatsScreen(navController = navController)
+        composable(
+            route = Screen.EditBook.route,
+            arguments = listOf(
+                navArgument("bookId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
+            BookEditScreen(
+                navController = navController,
+                bookId = it.arguments?.getString("bookId")
+            )
+        }
+        composable(Screen.Chats.route) {
+            ChatsScreen(
+                navController = navController,
+            )
         }
     }
 }

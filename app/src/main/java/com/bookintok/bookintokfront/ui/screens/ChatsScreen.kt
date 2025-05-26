@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 
 @Preview(showBackground = true)
 @Composable
@@ -29,6 +30,7 @@ fun ChatsScreenPreview() {
 
 @Composable
 fun ChatsScreen(navController: NavController) {
+    var userUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     LaunchedEffect(Unit) {
 //        getUserFromApi(
@@ -80,7 +82,7 @@ fun ChatsScreen(navController: NavController) {
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
             ) {
-                MenuInferior(navController = navController, 2)
+                MenuInferior(navController = navController, 2, userUid)
             }
 
         }

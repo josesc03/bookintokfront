@@ -113,6 +113,7 @@ fun RegisterScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
+            singleLine = true,
             value = username,
             onValueChange = { username = it },
             label = { Text("Usuario") },
@@ -132,6 +133,7 @@ fun RegisterScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
+            singleLine = true,
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
@@ -151,6 +153,7 @@ fun RegisterScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
+            singleLine = true,
             value = password,
             onValueChange = {
                 password = it
@@ -195,6 +198,7 @@ fun RegisterScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
+            singleLine = true,
             value = confirmPassword,
             onValueChange = {
                 confirmPassword = it

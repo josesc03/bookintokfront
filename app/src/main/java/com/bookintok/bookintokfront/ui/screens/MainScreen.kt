@@ -10,7 +10,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,7 +44,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
@@ -54,7 +56,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.bookintok.bookintokfront.R
@@ -86,6 +87,8 @@ fun MainScreenPreview() {
 
 @Composable
 fun MainScreen(navController: NavController) {
+    var userUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
     var libros by remember { mutableStateOf<List<Libro>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -110,7 +113,8 @@ fun MainScreen(navController: NavController) {
         if (query.isNotBlank()) filtersMap["busqueda"] = query
         if (distanciaSelected > 0f) filtersMap["distancia"] = distanciaSelected.toInt()
         if (categoriaPrincipal.isNotBlank()) filtersMap["categoriaPrincipal"] = categoriaPrincipal
-        if (categoriaSecundaria.isNotBlank()) filtersMap["categoriaSecundaria"] = categoriaSecundaria
+        if (categoriaSecundaria.isNotBlank()) filtersMap["categoriaSecundaria"] =
+            categoriaSecundaria
         if (idiomaSelected.isNotBlank()) filtersMap["idioma"] = idiomaSelected
         if (estadoSelected.isNotBlank()) filtersMap["estado"] = estadoSelected
         if (cubiertaSelected.isNotBlank()) filtersMap["cubierta"] = cubiertaSelected
@@ -119,12 +123,10 @@ fun MainScreen(navController: NavController) {
 
     LaunchedEffect(Unit) {
         getLibrosFromApi(
-            onSuccess = { libros = it },
+            onSuccess = { libros = it.shuffled() },
             onError = { error = it },
             filters = getAppliedFilters()
         )
-
-        println(getAppliedFilters())
     }
 
     BackHandler(filtersVisible) {
@@ -360,7 +362,7 @@ fun MainScreen(navController: NavController) {
                                     onClick = {
                                         filtersVisible = false
                                         getLibrosFromApi(
-                                            onSuccess = { libros = it },
+                                            onSuccess = { libros = it.shuffled() },
                                             onError = { error = it },
                                             filters = getAppliedFilters()
                                         )
@@ -395,20 +397,21 @@ fun MainScreen(navController: NavController) {
                             Text("No se encontraron libros.")
                         } else {
                             LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(vertical = 8.dp)
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 130.dp)
                             ) {
                                 items(libros) {
                                     LibroCard(it)
                                     Spacer(modifier = Modifier.height(8.dp))
                                 }
                             }
+                            Spacer(Modifier.height(130.dp))
                         }
                     }
                 }
 
             }
-
 
             if (!filtersVisible) {
                 Box(
@@ -447,7 +450,7 @@ fun MainScreen(navController: NavController) {
                             }
                         }
 
-                        MenuInferior(navController = navController)
+                        MenuInferior(navController = navController, userUid = userUid)
                     }
                 }
             }
@@ -465,6 +468,7 @@ fun LibroCard(libro: Libro) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFFF5F5F5))
+            .border(1.dp, Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
             .padding(16.dp)
     ) {
         AsyncImage(
@@ -473,7 +477,9 @@ fun LibroCard(libro: Libro) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
-                .clip(RoundedCornerShape(8.dp)),
+                .width(133.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .border(1.dp, Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp)),
             contentScale = ContentScale.Crop,
             error = painterResource(id = R.drawable.book_placeholder)
         )
@@ -489,19 +495,21 @@ fun LibroCard(libro: Libro) {
 }
 
 @Composable
-fun MenuInferior(navController: NavController, index: Int = 0) {
+fun MenuInferior(navController: NavController, index: Int = 0, userUid: String) {
 
-    var explorerColor: Color = Color(0xffb3d0be)
-    var chatsColor: Color = Color(0xffb3d0be)
-    var userColor: Color = Color(0xffb3d0be)
+    var explorerColor = Color(0xffb3d0be)
+    var chatsColor = Color(0xffb3d0be)
+    var userColor = Color(0xffb3d0be)
 
     when (index) {
         0 -> {
             explorerColor = Color(0xffd7d7d7)
         }
+
         1 -> {
             chatsColor = Color(0xffd7d7d7)
         }
+
         2 -> {
             userColor = Color(0xffd7d7d7)
         }
@@ -521,7 +529,19 @@ fun MenuInferior(navController: NavController, index: Int = 0) {
                 .fillMaxHeight()
                 .clickable(enabled = true, onClick = {
                     navController.navigate(Screen.Main.route)
-                }),
+                })
+                .drawBehind {
+                    val strokeWidth = 2.dp.toPx()
+                    val halfStroke = strokeWidth / 2
+                    val color = Color.Black.copy(alpha = 0.4f)
+
+                    drawLine(
+                        color = color,
+                        start = Offset(x = 0f, y = halfStroke),
+                        end = Offset(x = size.width, y = halfStroke),
+                        strokeWidth = strokeWidth
+                    )
+                },
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -532,14 +552,38 @@ fun MenuInferior(navController: NavController, index: Int = 0) {
         }
         Box(
             modifier = Modifier
-                .background(Color.Black.copy(alpha = .6f))
-                .padding(horizontal = 1.dp)
                 .background(chatsColor)
                 .weight(1f)
                 .fillMaxHeight()
                 .clickable(enabled = true, onClick = {
                     navController.navigate(Screen.Chats.route)
-                }),
+                })
+                .drawBehind {
+                    val strokeWidth = 2.dp.toPx()
+                    val halfStroke = strokeWidth / 2
+                    val color = Color.Black.copy(alpha = 0.4f)
+
+                    drawLine(
+                        color = color,
+                        start = Offset(x = 0f, y = halfStroke),
+                        end = Offset(x = size.width, y = halfStroke),
+                        strokeWidth = strokeWidth
+                    )
+
+                    drawLine(
+                        color = color,
+                        start = Offset(halfStroke, 0f),
+                        end = Offset(halfStroke, size.height),
+                        strokeWidth = strokeWidth
+                    )
+
+                    drawLine(
+                        color = color,
+                        start = Offset(size.width - halfStroke, 0f),
+                        end = Offset(size.width - halfStroke, size.height),
+                        strokeWidth = strokeWidth
+                    )
+                },
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -554,8 +598,20 @@ fun MenuInferior(navController: NavController, index: Int = 0) {
                 .weight(1f)
                 .fillMaxHeight()
                 .clickable(enabled = true, onClick = {
-                    navController.navigate(Screen.ProfilePage.route)
-                }),
+                    navController.navigate(Screen.ProfilePage.createRoute(userUid))
+                })
+                .drawBehind {
+                    val strokeWidth = 2.dp.toPx()
+                    val halfStroke = strokeWidth / 2
+                    val color = Color.Black.copy(alpha = 0.4f)
+
+                    drawLine(
+                        color = color,
+                        start = Offset(x = 0f, y = halfStroke),
+                        end = Offset(x = size.width, y = halfStroke),
+                        strokeWidth = strokeWidth
+                    )
+                },
             contentAlignment = Alignment.Center
         ) {
             Icon(

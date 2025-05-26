@@ -3,15 +3,27 @@ package com.bookintok.bookintokfront.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import com.bookintok.bookintokfront.R
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -23,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.bookintok.bookintokfront.R
 import com.bookintok.bookintokfront.ui.navigation.Screen
 import com.bookintok.bookintokfront.ui.responses.UsuarioResponse
 import com.google.firebase.auth.FirebaseAuth
@@ -55,7 +68,7 @@ fun LoginScreen(navController: NavController) {
     var passwordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-        Column(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFFFFFFFF))
@@ -73,6 +86,7 @@ fun LoginScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
+            singleLine = true,
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
@@ -92,6 +106,7 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
+            singleLine = true,
             value = password,
             onValueChange = { password = it },
             label = { Text("Contraseña") },
@@ -109,7 +124,7 @@ fun LoginScreen(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                IconButton (onClick = { passwordVisible = !passwordVisible }) {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Image(
                         painter = if (passwordVisible)
                             painterResource(id = R.drawable.visible)
@@ -133,9 +148,11 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
         Button(
-            onClick = { loginUser(email, password, navController) { error ->
-                errorMessage = error
-            } },
+            onClick = {
+                loginUser(email, password, navController) { error ->
+                    errorMessage = error
+                }
+            },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFB3D0BE),
             ),
@@ -161,9 +178,9 @@ fun LoginScreen(navController: NavController) {
             Text("REGISTRATE")
         }
 
-            errorMessage?.let { Text(text = it, color = Color.Red, modifier = Modifier.padding(8.dp)) }
+        errorMessage?.let { Text(text = it, color = Color.Red, modifier = Modifier.padding(8.dp)) }
 
-        }
+    }
 }
 
 fun loginUser(
@@ -218,36 +235,36 @@ fun checkLocationFromUID(
             }
 
             CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response: HttpResponse = client.get("http://10.0.2.2:8080/me") {
-                    header("Authorization", "Bearer $idToken")
-                }
+                try {
+                    val response: HttpResponse = client.get("http://10.0.2.2:8080/me") {
+                        header("Authorization", "Bearer $idToken")
+                    }
 
-                if (response.status.isSuccess()) {
-                    val response = response.body<UsuarioResponse>()
-                    val usuario = response.usuario
-                    withContext(Dispatchers.Main) {
-                        if (usuario.hasCoordinates()){
-                            navController.navigate(Screen.Main.route)
-                        } else {
-                            navController.navigate(Screen.Location.route)
+                    if (response.status.isSuccess()) {
+                        val response = response.body<UsuarioResponse>()
+                        val usuario = response.usuario
+                        withContext(Dispatchers.Main) {
+                            if (usuario.hasCoordinates()) {
+                                navController.navigate(Screen.Main.route)
+                            } else {
+                                navController.navigate(Screen.Location.route)
+                            }
+                        }
+                    } else {
+                        val errorBody = response.bodyAsText()
+                        withContext(Dispatchers.Main) {
+                            println("Error HTTP ${response.status.value}: $errorBody")
+                            onError("Error HTTP ${response.status.value}: $errorBody")
                         }
                     }
-                } else {
-                    val errorBody = response.bodyAsText()
+                } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        println("Error HTTP ${response.status.value}: $errorBody")
-                        onError("Error HTTP ${response.status.value}: $errorBody")
+                        onError("Excepción: ${e.localizedMessage}")
                     }
+                } finally {
+                    client.close()
                 }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    onError("Excepción: ${e.localizedMessage}")
-                }
-            } finally {
-                client.close()
             }
-        }
 
-    }
+        }
 }

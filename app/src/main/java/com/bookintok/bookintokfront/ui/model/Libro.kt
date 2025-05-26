@@ -3,25 +3,32 @@ package com.bookintok.bookintokfront.ui.model
 import com.bookintok.bookintokfront.ui.utils.InstantSerializer
 import kotlinx.serialization.Serializable
 import java.time.Instant
-import kotlin.time.ExperimentalTime
 
+@Serializable
 enum class EstadoLibro {
-    DISPONIBLE,
-    RESERVADO,
-    INTERCAMBIADO
-}
+    NUEVO,
 
-enum class TipoCubierta {
-    TAPA_BLANDA,
-    TAPA_DURA
+    COMO_NUEVO,
+
+    USADO,
+
+    ANTIGUO
 }
 
 @Serializable
-data class Libro (
+enum class TipoCubierta {
+    TAPA_DURA,
+
+    TAPA_BLANDA
+}
+
+@Serializable
+data class Libro(
     val id: Int,
-    val idUsuario: Int,
+    val uidUsuario: String,
     val titulo: String,
     val autor: String,
+    val descripcion: String?,
     val idioma: String,
     val cubierta: TipoCubierta,
     val categoriaPrincipal: String,
