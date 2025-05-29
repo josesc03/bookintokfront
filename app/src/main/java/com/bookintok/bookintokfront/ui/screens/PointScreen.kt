@@ -14,7 +14,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -72,7 +76,9 @@ fun PointScreen(
             )
 
             GoogleMap(
-                modifier = Modifier.fillMaxHeight(.75f).padding(bottom = 8.dp),
+                modifier = Modifier
+                    .fillMaxHeight(.75f)
+                    .padding(bottom = 8.dp),
                 cameraPositionState = cameraPositionState,
                 onMapClick = {
                     selectedPosition = it
@@ -86,9 +92,11 @@ fun PointScreen(
                 }
             }
 
-            Column (modifier = Modifier.fillMaxHeight(),
+            Column(
+                modifier = Modifier.fillMaxHeight(),
                 verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally) {
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Button(
                     onClick = {
                         updateLocation(latlng = selectedPosition, onSuccess = {

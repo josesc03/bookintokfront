@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,9 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bookintok.bookintokfront.ui.navigation.Screen
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun HomeScreen(navController: NavController) {
+    val firebaseAuth = FirebaseAuth.getInstance()
     var sliderValue by remember { mutableFloatStateOf(0f) }
 
     Column(
@@ -63,8 +64,14 @@ fun HomeScreen(navController: NavController) {
             onValueChange = {
                 sliderValue = it
                 if (sliderValue == 1f) {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
+                    if (firebaseAuth.currentUser != null) {
+                        navController.navigate(Screen.Main.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Screen.Login.route) {
+                            checkLocationFromUID(navController)
+                        }
                     }
                 }
             },

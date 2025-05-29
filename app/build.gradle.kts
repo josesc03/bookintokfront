@@ -87,5 +87,10 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.play.services.maps.v1820)
 
+    implementation(libs.imagepicker)
+
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.serialization.json.v180)
+
 
 }

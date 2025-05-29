@@ -2,7 +2,9 @@ package com.bookintok.bookintokfront.ui.screens
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -49,6 +51,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -96,7 +99,6 @@ fun ProfileScreenPreview() {
 @Composable
 fun ProfileScreen(navController: NavController, uid: String) {
     var userUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-    println(uid)
 
     var isCurrentUserProfile by remember { mutableStateOf(false) }
 
@@ -113,8 +115,6 @@ fun ProfileScreen(navController: NavController, uid: String) {
     var errorLibros by remember { mutableStateOf<String?>(null) }
 
     var mostrarLibros by remember { mutableStateOf(true) }
-
-
 
     LaunchedEffect(Unit) {
         if (userUid == uid) isCurrentUserProfile = true
@@ -153,23 +153,8 @@ fun ProfileScreen(navController: NavController, uid: String) {
                 .padding(innerPadding)
         ) {
 
-            Box(
-                modifier = Modifier
-                    .background(Color(0xffb3d0be))
-                    .fillMaxWidth()
-                    .height(72.dp)
-                    .align(Alignment.TopCenter),
-                contentAlignment = Alignment.Center
-            ) {
+            HeaderBookintok()
 
-                Text(
-                    text = "BOOKINTOK",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Black,
-                )
-
-            }
 
 
             Column {
@@ -254,15 +239,14 @@ fun ProfileScreen(navController: NavController, uid: String) {
                     if (libros == null && errorLibros == null) {
                         CircularProgressIndicator()
                     } else {
-                        ShowLibros(libros)
+                        ShowLibros(libros, navController)
                     }
                 } else {
                     if (valoraciones == null && errorValoraciones == null) {
                         CircularProgressIndicator()
                     } else {
-                        valoraciones?.let {
-                            ShowValoraciones(valoraciones = it)
-                        }
+                        Spacer(Modifier.height(16.dp))
+                        ShowValoraciones(valoraciones)
                     }
                 }
 
@@ -323,8 +307,8 @@ fun ProfileScreen(navController: NavController, uid: String) {
 }
 
 @Composable
-fun ShowValoraciones(valoraciones: List<Valoracion>) {
-    if (valoraciones.isEmpty()) {
+fun ShowValoraciones(valoraciones: List<Valoracion>?) {
+    if (valoraciones?.isEmpty() == true || valoraciones == null) {
         Text(
             "No se encontraron valoraciones",
             modifier = Modifier
@@ -335,12 +319,14 @@ fun ShowValoraciones(valoraciones: List<Valoracion>) {
         return
     }
     LazyColumn(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 16.dp, end = 16.dp, bottom = 55.dp, top = 16.dp)
     ) {
         items(valoraciones) {
             Column(
                 modifier = Modifier
-                    .padding(8.dp)
+                    .padding(16.dp)
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -405,7 +391,7 @@ fun getNombreFromApi(uid: String, onSuccess: (String) -> Unit) {
 }
 
 @Composable
-fun ShowLibros(libros: List<Libro>?) {
+fun ShowLibros(libros: List<Libro>?, navController: NavController) {
     if (libros.isNullOrEmpty()) {
         Text(
             "No se encontraron libros",
@@ -418,11 +404,14 @@ fun ShowLibros(libros: List<Libro>?) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 16.dp, end = 16.dp, bottom = 55.dp)
+                .padding(start = 16.dp, end = 16.dp, bottom = 50.dp)
         ) {
-            items(libros) {
-                LibroCard(it)
-                Spacer(modifier = Modifier.height(8.dp))
+            items(libros.size) { index ->
+                if (index == 0) {
+                    Spacer(Modifier.height(16.dp))
+                }
+                LibroCard(libros[index], navController)
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
@@ -593,6 +582,8 @@ fun ShowUserInfo(
     currentUserUid: String,
     userInfoUid: String
 ) {
+    val context = LocalContext.current
+
     var valorarUsuario by remember { mutableStateOf(false) }
 
     val instant = usuario.fechaRegistro
@@ -612,6 +603,7 @@ fun ShowUserInfo(
 
         if (userInfoUid == currentUserUid) {
             Icon(
+                modifier = Modifier.size(30.dp),
                 imageVector = Icons.Default.Settings,
                 contentDescription = "Settings icon",
                 tint = Color.Black.copy(.6f)
@@ -663,11 +655,19 @@ fun ShowUserInfo(
             if (userInfoUid != currentUserUid) {
                 Spacer(Modifier.height(8.dp))
 
-                Button(onClick = {
-                    if (hasCompletedExchange(userInfoUid) && !hasUserRated(userInfoUid)
-                    )
-                        valorarUsuario = true
-                }) {
+                Button(
+                    onClick = {
+                        if (hasCompletedExchange(userInfoUid) && !hasUserRated(userInfoUid))
+                            valorarUsuario = true
+                        else
+                            Toast.makeText(
+                                context,
+                                "No puedes valorar a este usuario",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                    },
+                    border = BorderStroke(1.dp, Color.Black.copy(.4f)),
+                ) {
                     Text("Valorar")
                 }
             }

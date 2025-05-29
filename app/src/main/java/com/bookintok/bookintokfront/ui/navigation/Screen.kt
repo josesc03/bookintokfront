@@ -28,6 +28,16 @@ sealed class Screen(val route: String) {
         }
     }
 
+    object DetailBook : Screen("detailbook?bookId={bookId}") {
+        fun createRoute(bookId: String?): String {
+            return if (bookId != null) {
+                "detailbook?bookId=$bookId"
+            } else {
+                "detailbook"
+            }
+        }
+    }
+
     object Chats : Screen("chats")
 
     // TODO: DEMAS PANTALLAS

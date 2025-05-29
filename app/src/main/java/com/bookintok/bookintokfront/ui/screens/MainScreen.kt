@@ -1,30 +1,37 @@
 package com.bookintok.bookintokfront.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -55,6 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
@@ -71,6 +79,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.encodeURLQueryComponent
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
@@ -93,6 +102,7 @@ fun MainScreen(navController: NavController) {
     var error by remember { mutableStateOf<String?>(null) }
 
     var filtersVisible by remember { mutableStateOf(false) }
+    var loadingBooks by remember { mutableStateOf(true) }
 
     val focusManager = LocalFocusManager.current
 
@@ -123,7 +133,10 @@ fun MainScreen(navController: NavController) {
 
     LaunchedEffect(Unit) {
         getLibrosFromApi(
-            onSuccess = { libros = it.shuffled() },
+            onSuccess = {
+                libros = it.shuffled()
+                loadingBooks = false
+            },
             onError = { error = it },
             filters = getAppliedFilters()
         )
@@ -146,24 +159,7 @@ fun MainScreen(navController: NavController) {
                     focusManager.clearFocus()
                 }
         ) {
-
-            Box(
-                modifier = Modifier
-                    .background(Color(0xffb3d0be))
-                    .fillMaxWidth()
-                    .height(72.dp)
-                    .align(Alignment.TopCenter),
-                contentAlignment = Alignment.Center
-            ) {
-
-                Text(
-                    text = "BOOKINTOK",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Black,
-                )
-
-            }
+            HeaderBookintok()
 
             Column {
 
@@ -317,12 +313,42 @@ fun MainScreen(navController: NavController) {
                                 Spacer(modifier = Modifier.height(8.dp))
 
 
-                                Row {
-                                    listOf("Como nuevo", "Usado", "Antiguo").forEach { estado ->
+                                Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                                    listOf(
+                                        "Nuevo",
+                                        "Como nuevo",
+                                        "Usado",
+                                        "Antiguo"
+                                    ).forEach { estado ->
                                         FilterChip(
                                             selected = estadoSelected == estado,
-                                            onClick = { estadoSelected = estado },
+                                            onClick = {
+                                                if (estadoSelected == estado) {
+                                                    estadoSelected = ""
+                                                } else {
+                                                    estadoSelected = estado
+                                                }
+                                            },
                                             label = { Text(estado) },
+                                            trailingIcon = if (estadoSelected == estado) {
+                                                {
+                                                    AnimatedContent(
+                                                        targetState = estadoSelected == estado,
+                                                        label = ""
+                                                    ) { isSelected ->
+                                                        if (isSelected) {
+                                                            Icon(
+                                                                Icons.Filled.Close,
+                                                                contentDescription = "Deseleccionar",
+                                                                modifier = Modifier.size(
+                                                                    FilterChipDefaults.IconSize
+                                                                )
+                                                            )
+                                                        }
+                                                    }
+
+                                                }
+                                            } else null,
                                             modifier = Modifier.padding(end = 8.dp),
                                             colors = FilterChipDefaults.filterChipColors(
                                                 selectedContainerColor = Color(0xffb3d0be)
@@ -346,8 +372,35 @@ fun MainScreen(navController: NavController) {
                                     listOf("Tapa dura", "Tapa blanda").forEach { cubierta ->
                                         FilterChip(
                                             selected = cubiertaSelected == cubierta,
-                                            onClick = { cubiertaSelected = cubierta },
+                                            onClick = {
+                                                if (cubiertaSelected == cubierta) {
+                                                    cubiertaSelected = ""
+                                                } else {
+                                                    cubiertaSelected = cubierta
+                                                }
+                                            },
                                             label = { Text(cubierta) },
+                                            trailingIcon = if (cubiertaSelected == cubierta) {
+                                                {
+                                                    AnimatedContent(
+                                                        targetState = cubiertaSelected == cubierta,
+                                                        label = ""
+                                                    ) { isSelected ->
+                                                        if (isSelected) {
+                                                            Icon(
+                                                                Icons.Filled.Close,
+                                                                contentDescription = "Deseleccionar",
+                                                                modifier = Modifier.size(
+                                                                    FilterChipDefaults.IconSize
+                                                                )
+                                                            )
+                                                        }
+                                                    }
+
+                                                }
+
+
+                                            } else null,
                                             modifier = Modifier.padding(end = 8.dp),
                                             colors = FilterChipDefaults.filterChipColors(
                                                 selectedContainerColor = Color(0xffb3d0be)
@@ -361,8 +414,15 @@ fun MainScreen(navController: NavController) {
                                 Button(
                                     onClick = {
                                         filtersVisible = false
+                                        focusManager.clearFocus()
+
+                                        println(getAppliedFilters())
+
                                         getLibrosFromApi(
-                                            onSuccess = { libros = it.shuffled() },
+                                            onSuccess = {
+                                                libros = it.shuffled()
+                                                loadingBooks = false
+                                            },
                                             onError = { error = it },
                                             filters = getAppliedFilters()
                                         )
@@ -393,8 +453,10 @@ fun MainScreen(navController: NavController) {
                     if (error != null) {
                         Text("Error: $error", color = Color.Red)
                     } else {
-                        if (libros.isEmpty()) {
+                        if (libros.isEmpty() && loadingBooks == false) {
                             Text("No se encontraron libros.")
+                        } else if (loadingBooks == true) {
+                            CircularProgressIndicator()
                         } else {
                             LazyColumn(
                                 modifier = Modifier
@@ -402,7 +464,7 @@ fun MainScreen(navController: NavController) {
                                     .padding(start = 16.dp, end = 16.dp, bottom = 130.dp)
                             ) {
                                 items(libros) {
-                                    LibroCard(it)
+                                    LibroCard(it, navController)
                                     Spacer(modifier = Modifier.height(8.dp))
                                 }
                             }
@@ -423,7 +485,7 @@ fun MainScreen(navController: NavController) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xffe6f0ea))
+                                .background(MaterialTheme.colorScheme.tertiary)
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
@@ -445,7 +507,7 @@ fun MainScreen(navController: NavController) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.map),
                                     contentDescription = "Location Icon",
-                                    tint = Color.Black.copy(alpha = 0.4f)
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         }
@@ -462,7 +524,7 @@ fun MainScreen(navController: NavController) {
 
 @Stable
 @Composable
-fun LibroCard(libro: Libro) {
+fun LibroCard(libro: Libro, navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -470,14 +532,16 @@ fun LibroCard(libro: Libro) {
             .background(Color(0xFFF5F5F5))
             .border(1.dp, Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
             .padding(16.dp)
+            .clickable(onClick = {
+                navController.navigate(Screen.DetailBook.createRoute(libro.id.toString()))
+            })
     ) {
         AsyncImage(
             model = libro.imagenUrl,
             contentDescription = "Portada del libro: ${libro.titulo}",
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .width(133.dp)
+                .aspectRatio(3f / 2f)
                 .clip(RoundedCornerShape(8.dp))
                 .border(1.dp, Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp)),
             contentScale = ContentScale.Crop,
@@ -547,7 +611,7 @@ fun MenuInferior(navController: NavController, index: Int = 0, userUid: String) 
             Icon(
                 painter = painterResource(R.drawable.explore),
                 contentDescription = "Explore Icon",
-                tint = Color.Black.copy(alpha = 0.4f)
+                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
         Box(
@@ -589,7 +653,7 @@ fun MenuInferior(navController: NavController, index: Int = 0, userUid: String) 
             Icon(
                 painter = painterResource(id = R.drawable.chats),
                 contentDescription = "Chats Icon",
-                tint = Color.Black.copy(alpha = 0.4f)
+                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
         Box(
@@ -617,7 +681,7 @@ fun MenuInferior(navController: NavController, index: Int = 0, userUid: String) 
             Icon(
                 painter = painterResource(R.drawable.user),
                 contentDescription = "User Icon",
-                tint = Color.Black.copy(alpha = 0.4f)
+                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
     }
@@ -729,15 +793,16 @@ fun getLibrosFromApi(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                var url = "http://10.0.2.2:8080/libro/allLibros"
-                filters?.let {
-                    val queryParams = it.map { (key, value) -> "$key=$value" }.joinToString("&")
-                    if (queryParams.isNotEmpty()) url += "?$queryParams"
-                }
+                val queryParams = filters?.map { (key, value) ->
+                    "${key.encodeURLQueryComponent()}=${value.toString().encodeURLQueryComponent()}"
+                }?.joinToString("&")
+
+                val url =
+                    "http://10.0.2.2:8080/libro/allLibros" + if (!queryParams.isNullOrBlank()) "?$queryParams" else ""
 
                 val response: HttpResponse = client.get(url) {
-                    header("Authorization", "Bearer $idToken")
                     println("Requesting URL: $url with token: $idToken")
+                    header("Authorization", "Bearer $idToken")
                 }
 
                 if (response.status.isSuccess()) {
@@ -760,5 +825,26 @@ fun getLibrosFromApi(
                 client.close()
             }
         }
+    }
+}
+
+@Composable
+fun BoxScope.HeaderBookintok() {
+    Box(
+        modifier = Modifier
+            .background(Color(0xffb3d0be))
+            .fillMaxWidth()
+            .height(72.dp)
+            .align(Alignment.TopCenter)
+            .zIndex(100f),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "BOOKINTOK",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onPrimary,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }

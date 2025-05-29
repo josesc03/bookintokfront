@@ -10,7 +10,10 @@ private val LightColorScheme = lightColorScheme(
     secondary = Color(0xFF006025),
     tertiary = Color(0xffe6f0ea),
 
-    onPrimary = Color.Black.copy(.6f)
+    onPrimary = Color.Black.copy(.4f),
+
+    background = Color.White,
+    onBackground = Color.Black
 
 )
 

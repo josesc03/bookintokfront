@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.bookintok.bookintokfront.ui.screens.BookDetailScreen
 import com.bookintok.bookintokfront.ui.screens.BookEditScreen
 import com.bookintok.bookintokfront.ui.screens.ChatsScreen
 import com.bookintok.bookintokfront.ui.screens.HomeScreen
@@ -67,14 +68,20 @@ fun AppNavigation() {
         composable(Screen.Main.route) {
             MainScreen(navController = navController)
         }
-        composable(Screen.ProfilePage.route, arguments = listOf(navArgument("userUid") {
-            type = NavType.StringType
-        })) {
+        composable(
+            Screen.ProfilePage.route, arguments = listOf(
+                navArgument("userUid") {
+                    type = NavType.StringType
+                }
+            )
+        ) {
             ProfileScreen(
                 navController = navController,
-                uid = it.arguments?.getString("userUid") ?: ""
+                uid = it.arguments?.getString("userUid").toString()
             )
         }
+
+
         composable(
             route = Screen.EditBook.route,
             arguments = listOf(
@@ -90,6 +97,22 @@ fun AppNavigation() {
                 bookId = it.arguments?.getString("bookId")
             )
         }
+
+        composable(
+            route = Screen.DetailBook.route,
+            arguments = listOf(
+                navArgument("bookId") {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            BookDetailScreen(
+                navController = navController,
+                bookId = it.arguments?.getString("bookId").toString()
+            )
+        }
+
+
         composable(Screen.Chats.route) {
             ChatsScreen(
                 navController = navController,

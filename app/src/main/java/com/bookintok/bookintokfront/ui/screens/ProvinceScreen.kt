@@ -2,10 +2,30 @@ package com.bookintok.bookintokfront.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +63,10 @@ fun ProvinceScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = paddingValues.calculateTopPadding(), bottom = paddingValues.calculateBottomPadding()),
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding()
+                ),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -58,13 +81,19 @@ fun ProvinceScreen(navController: NavController) {
                 color = Color.Black
             )
 
-            Column (modifier = Modifier.padding(horizontal = 16.dp).fillMaxSize(),
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
+                verticalArrangement = Arrangement.Center
+            ) {
 
-                Text("Para seleccionar una provincia primero tienes que seleccionar la comunidad de la misma",
+                Text(
+                    "Para seleccionar una provincia primero tienes que seleccionar la comunidad de la misma",
                     textAlign = TextAlign.Center,
-                    color = Color.Black.copy(alpha = 0.6f))
+                    color = Color.Black.copy(alpha = 0.6f)
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -101,7 +130,8 @@ fun ProvinceScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = selectedProvince?.name?.let { "Provincia seleccionada: $it" } ?: "Selecciona una provincia para mostrar",
+                    text = selectedProvince?.name?.let { "Provincia seleccionada: $it" }
+                        ?: "Selecciona una provincia para mostrar",
                     modifier = Modifier.padding(top = 16.dp),
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center
@@ -110,8 +140,11 @@ fun ProvinceScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = { if (selectedProvince != null) showMapDialog = true
-                              selectedPosition = LatLng(selectedProvince!!.latitude, selectedProvince!!.longitude)},
+                    onClick = {
+                        if (selectedProvince != null) showMapDialog = true
+                        selectedPosition =
+                            LatLng(selectedProvince!!.latitude, selectedProvince!!.longitude)
+                    },
                     enabled = selectedProvince != null,
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -120,7 +153,12 @@ fun ProvinceScreen(navController: NavController) {
                         disabledContainerColor = Color(0xffe0e0e0),
                         disabledContentColor = Color(0xff808080)
                     ),
-                    border = BorderStroke(1.dp, if (selectedProvince != null) Color.Black.copy(alpha = 0.6f) else Color(0xFF808080))
+                    border = BorderStroke(
+                        1.dp,
+                        if (selectedProvince != null) Color.Black.copy(alpha = 0.6f) else Color(
+                            0xFF808080
+                        )
+                    )
                 ) {
                     Text(
                         "Continuar",

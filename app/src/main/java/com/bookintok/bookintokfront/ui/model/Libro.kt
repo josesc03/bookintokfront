@@ -34,7 +34,7 @@ data class Libro(
     val categoriaPrincipal: String,
     val categoriaSecundaria: String? = null,
     val estado: EstadoLibro,
-    val imagenUrl: String?,
+    var imagenUrl: String?,
     @Serializable(with = InstantSerializer::class)
     val fechaPublicacion: Instant
 )
