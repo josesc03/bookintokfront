@@ -80,7 +80,6 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
-import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -88,7 +87,6 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
@@ -99,8 +97,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import kotlin.coroutines.resumeWithException
 import androidx.compose.ui.text.TextStyle as ComposeTextStyle
 
@@ -358,7 +363,7 @@ fun BookEditScreen(navController: NavController, bookId: String? = null) {
                     )
                 } else {
                     AsyncImage(
-                        model = libro?.imagenUrl,
+                        model = imagenUrl,
                         contentDescription = "Portada del libro: ${libro?.titulo}",
                         modifier = Modifier
                             .width(300.dp)
@@ -543,19 +548,51 @@ fun BookEditScreen(navController: NavController, bookId: String? = null) {
                     }
                     Button(
                         onClick = {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                if (bitmap.value != null) {
-                                    val url =
-                                        subirImagen(
-                                            bitmap.value!!,
-                                            "a6cf3bbee48752e0d178068ae93dac11"
-                                        )
-                                    withContext(Dispatchers.Main) {
-                                        imagenUrl = url
-                                    }
-                                }
+                            if (bitmap.value != null) {
+                                println("intentando subir imagen")
+                                subirImagen(
+                                    bitmap.value!!,
+                                    "a6cf3bbee48752e0d178068ae93dac11",
+                                    callback = { success, response ->
+                                        if (success) {
+                                            println("Imagen subida correctamente: $response")
+                                            val json =
+                                                JSONObject(response.toString())
+                                            imagenUrl =
+                                                json.getJSONObject("data")
+                                                    .getString("url")
+                                        } else {
+                                            println("Error al subir imagen: $response")
+                                        }
 
-                                val bookRequest = BookRequest(
+                                        val bookRequest = BookRequest(
+                                            titulo = titulo,
+                                            autor = autor,
+                                            idioma = idioma,
+                                            cubierta = if (cubierta == "Tapa dura") TipoCubierta.TAPA_DURA else TipoCubierta.TAPA_BLANDA,
+                                            categoriaPrincipal = generoPrincipal,
+                                            categoriaSecundaria = generoSecundario,
+                                            estado = if (estado == "Nuevo") EstadoLibro.NUEVO else if (estado == "Como nuevo") EstadoLibro.COMO_NUEVO else if (estado == "Usado") EstadoLibro.USADO else EstadoLibro.ANTIGUO,
+                                            imagenUrl = imagenUrl,
+                                            descripcion = descripcion
+                                        )
+                                        updateLibro(
+                                            idLibro = bookId?.toInt(),
+                                            bookRequest = bookRequest,
+                                            onError = {
+                                                errorMessage = it
+                                                showErrorDialog = true
+                                            },
+                                            onSuccess = {
+                                                newBookId =
+                                                    it
+                                                showSuccessDialog = true
+                                            })
+
+                                    }
+                                )
+                            } else {
+                                val libroActual = BookRequest(
                                     titulo = titulo,
                                     autor = autor,
                                     idioma = idioma,
@@ -566,27 +603,38 @@ fun BookEditScreen(navController: NavController, bookId: String? = null) {
                                     imagenUrl = imagenUrl,
                                     descripcion = descripcion
                                 )
-                                updateLibro(
-                                    idLibro = bookId?.toInt(),
-                                    bookRequest = bookRequest,
-                                    onError = {
-                                        errorMessage = it
-                                        showErrorDialog = true
-                                    },
-                                    onSuccess = {
-                                        newBookId =
-                                            it
-                                        showSuccessDialog = true
-                                    })
+
+                                if (libroActual != libro?.toBookRequest()) {
+                                    updateLibro(
+                                        idLibro = bookId?.toInt(),
+                                        bookRequest = libroActual,
+                                        onError = { errorMessage = it; showErrorDialog = true },
+                                        onSuccess = { newBookId = it; showSuccessDialog = true }
+                                    )
+                                }
                             }
 
+
                         },
-                        enabled = (titulo.isNotBlank() &&
-                                autor.isNotBlank() &&
-                                estado.isNotBlank() &&
-                                generoPrincipal.isNotBlank() &&
-                                idioma.isNotBlank() &&
-                                cubierta.isNotBlank()
+                        enabled = (
+                                titulo.isNotBlank() &&
+                                        autor.isNotBlank() &&
+                                        estado.isNotBlank() &&
+                                        generoPrincipal.isNotBlank() &&
+                                        idioma.isNotBlank() &&
+                                        cubierta.isNotBlank() &&
+                                        (
+                                                titulo != libro?.titulo ||
+                                                        autor != libro?.autor ||
+                                                        idioma != libro?.idioma ||
+                                                        cubierta != (if (libro?.cubierta == TipoCubierta.TAPA_DURA) "Tapa dura" else "Tapa blanda") ||
+                                                        generoPrincipal != libro?.categoriaPrincipal ||
+                                                        generoSecundario != libro?.categoriaSecundaria ||
+                                                        estado != (if (libro?.estado == EstadoLibro.NUEVO) "Nuevo" else if (libro?.estado == EstadoLibro.COMO_NUEVO) "Como nuevo" else if (libro?.estado == EstadoLibro.USADO) "Usado" else "Antiguo") ||
+                                                        descripcion != libro?.descripcion ||
+                                                        bitmap.value != null ||
+                                                        imagenUrl != libro?.imagenUrl // tambien en la url
+                                                )
                                 ),
                         border = BorderStroke(1.dp, Color.Black.copy(.6f))
                     ) {
@@ -715,6 +763,21 @@ fun BookEditScreen(navController: NavController, bookId: String? = null) {
 
 }
 
+// Extensión para convertir Libro a BookRequest (para comparación)
+fun Libro.toBookRequest(): BookRequest {
+    return BookRequest(
+        titulo = this.titulo,
+        autor = this.autor,
+        idioma = this.idioma,
+        cubierta = this.cubierta,
+        categoriaPrincipal = this.categoriaPrincipal,
+        categoriaSecundaria = this.categoriaSecundaria,
+        estado = this.estado,
+        imagenUrl = this.imagenUrl,
+        descripcion = this.descripcion
+    )
+}
+
 private fun eliminarLibro(idLibro: Int, onSuccess: () -> Unit, onError: (String) -> Unit) {
     val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -774,40 +837,42 @@ private fun eliminarLibro(idLibro: Int, onSuccess: () -> Unit, onError: (String)
         }
 }
 
-suspend fun subirImagen(bitmap: Bitmap, apiKey: String): String? {
-    val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+
+fun subirImagen(bitmap: Bitmap, apiKey: String, callback: (Boolean, String?) -> Unit) {
+    val client = OkHttpClient()
+
+    val stream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
+    val byteArray = stream.toByteArray()
+
+    val base64Image = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+
+    val formBody = FormBody.Builder()
+        .add("key", apiKey)
+        .add("image", base64Image)
+        .build()
+
+    val request = Request.Builder()
+        .url("https://api.imgbb.com/1/upload")
+        .post(formBody)
+        .build()
+
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            callback(false, e.message)
         }
-    }
 
-    val outputStream = ByteArrayOutputStream()
-    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-    val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
-
-    return try {
-        val response: HttpResponse = client.submitForm(
-            url = "https://api.imgbb.com/1/upload",
-            formParameters = Parameters.build {
-                append("key", apiKey)
-                append("image", base64Image)
+        override fun onResponse(call: Call, response: Response) {
+            response.use {
+                if (!it.isSuccessful) {
+                    callback(false, "Error: ${it.code}")
+                } else {
+                    val responseBody = it.body?.string()
+                    callback(true, responseBody)
+                }
             }
-        )
-
-        if (response.status.isSuccess()) {
-            val body = response.bodyAsText()
-            val json = JSONObject(body)
-            val data = json.getJSONObject("data")
-            val url = data.optString("url")
-            if (url.isNotEmpty()) {
-                url
-            } else {
-                data.optJSONObject("image")?.optString("url")
-            }
-        } else null
-    } catch (e: Exception) {
-        null
-    }
+        }
+    })
 }
 
 

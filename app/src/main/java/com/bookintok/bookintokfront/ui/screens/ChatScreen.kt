@@ -257,7 +257,8 @@ fun ChatScreen(navController: NavController, idChat: String) {
                         IconButton(onClick = { menuExpanded = true }) {
                             Icon(
                                 imageVector = Icons.Filled.MoreVert,
-                                contentDescription = "Opciones del chat"
+                                contentDescription = "Opciones del chat",
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
 

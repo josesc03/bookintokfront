@@ -112,6 +112,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import org.json.JSONObject
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -178,6 +179,7 @@ fun ProfileScreen(navController: NavController, uid: String) {
             onSuccess = {
                 usuario = it
                 nombre = it.nombre
+                imagenUrl = it.imagenUrl
             },
             onError = { errorUsuario = it },
             uid = uid
@@ -453,7 +455,7 @@ fun ProfileScreen(navController: NavController, uid: String) {
                             )
                         } else {
                             AsyncImage(
-                                model = usuario?.imagenUrl,
+                                model = imagenUrl,
                                 contentDescription = "Imagen de perfil de: ${usuario?.nombre}",
                                 modifier = Modifier
                                     .width(200.dp)
@@ -482,7 +484,7 @@ fun ProfileScreen(navController: NavController, uid: String) {
                             ) {
                                 Text("Cambiar imagen")
                             }
-                            if (bitmap.value != null || usuario?.imagenUrl != null) {
+                            if (bitmap.value != null || imagenUrl != null) {
                                 Spacer(Modifier.width(8.dp))
                                 Button(
                                     onClick = {
@@ -531,31 +533,68 @@ fun ProfileScreen(navController: NavController, uid: String) {
                                 border = BorderStroke(
                                     width = 1.dp,
                                     color = Color(0xff006025)
-                                )
+                                ),
+                                enabled = (nombre != usuario?.nombre || bitmap.value != null)
                             ) {
                                 Text("Cancelar")
                             }
                             Button(
                                 onClick = {
                                     val datosActualizados = mutableMapOf<String, String>()
-                                    imagenUrl?.let { datosActualizados["imageUrl"] = it }
-                                    if (nombre != usuario?.nombre) {
-                                        datosActualizados["nombre"] = nombre
-                                    }
-                                    if (datosActualizados.isNotEmpty()) {
-                                        scope.launch {
 
-                                            if (bitmap.value != null) {
-                                                val url =
-                                                    subirImagen(
-                                                        bitmap.value!!,
-                                                        "a6cf3bbee48752e0d178068ae93dac11"
-                                                    )
-                                                withContext(Dispatchers.Main) {
-                                                    imagenUrl = url
+                                    if (bitmap.value != null) {
+                                        subirImagen(
+                                            bitmap.value!!,
+                                            "a6cf3bbee48752e0d178068ae93dac11",
+                                            callback = { success, response ->
+                                                if (success) {
+                                                    val json = JSONObject(response.toString())
+                                                    imagenUrl =
+                                                        json.getJSONObject("data").getString("url")
+                                                } else {
+                                                    println("Error al subir imagen: $response")
                                                 }
-                                            }
 
+                                                imagenUrl?.let {
+                                                    datosActualizados["imageUrl"] = it
+                                                }
+                                                if (nombre != usuario?.nombre) {
+                                                    datosActualizados["nombre"] = nombre
+                                                }
+
+                                                updateUser(
+                                                    datosActualizados,
+                                                    onSuccess = {
+                                                        getUserFromApi(
+                                                            onSuccess = {
+                                                                usuario = it
+                                                                nombre = it.nombre
+                                                            },
+                                                            onError = { errorUsuario = it },
+                                                            uid = uid
+                                                        )
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Usuario actualizado",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    },
+                                                    onError = {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Error al actualizar",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
+                                                )
+                                            }
+                                        )
+                                    } else {
+                                        if (nombre != usuario?.nombre || imagenUrl != usuario?.imagenUrl) {
+                                            datosActualizados["nombre"] = nombre
+                                        }
+
+                                        if (datosActualizados.isNotEmpty()) {
                                             updateUser(
                                                 datosActualizados,
                                                 onSuccess = {
@@ -583,6 +622,7 @@ fun ProfileScreen(navController: NavController, uid: String) {
                                             )
                                         }
                                     }
+
                                     showUserConfig.value = false
                                     imagenUrl = null
                                 },
@@ -590,6 +630,7 @@ fun ProfileScreen(navController: NavController, uid: String) {
                             ) {
                                 Text("Confirmar")
                             }
+
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         HorizontalDivider()
@@ -598,7 +639,7 @@ fun ProfileScreen(navController: NavController, uid: String) {
                             onClick = {
                                 FirebaseAuth.getInstance().signOut()
                                 navController.navigate(Screen.Login.route) {
-                                    popUpTo(navController.graph.startDestinationId) {
+                                    popUpTo(Screen.Login.route) {
                                         inclusive = true
                                     }
                                     launchSingleTop = true
@@ -619,7 +660,7 @@ fun ProfileScreen(navController: NavController, uid: String) {
 
 }
 
-suspend fun updateUser(
+fun updateUser(
     data: Map<String, String>,
     onSuccess: () -> Unit,
     onError: (String) -> Unit
@@ -636,39 +677,49 @@ suspend fun updateUser(
         return
     }
 
-    try {
-        val idToken = user.getIdToken(true).await().token
+    user.getIdToken(true).addOnSuccessListener { result ->
+        val idToken = result.token
         if (idToken == null) {
             onError("No se pudo obtener el token de Firebase")
-            return
+            return@addOnSuccessListener
         }
 
-        val response: HttpResponse = client.post("http://10.0.2.2:8080/usuario/update") {
-            header("Authorization", "Bearer $idToken")
-            contentType(ContentType.Application.Json)
-            setBody(data)
-        }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response: HttpResponse = client.post("http://10.0.2.2:8080/usuario/update") {
+                    header("Authorization", "Bearer $idToken")
+                    contentType(ContentType.Application.Json)
+                    setBody(data)
+                }
 
-        if (response.status.isSuccess()) {
-            withContext(Dispatchers.Main) {
-                onSuccess()
-            }
-        } else {
-            val errorBody = response.bodyAsText()
-            withContext(Dispatchers.Main) {
-                onError("Error HTTP ${response.status.value}: $errorBody")
+                if (response.status.isSuccess()) {
+                    withContext(Dispatchers.Main) {
+                        onSuccess()
+                    }
+                } else {
+                    val errorBody = response.bodyAsText()
+                    withContext(Dispatchers.Main) {
+                        println("Error HTTP ${response.status.value}: $errorBody")
+                        onError("Error HTTP ${response.status.value}: $errorBody")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    println("Excepción: ${e.localizedMessage}")
+                    onError("Excepción: ${e.localizedMessage}")
+                }
+            } finally {
+                client.close()
             }
         }
-    } catch (e: Exception) {
-        withContext(Dispatchers.Main) {
-            onError("Excepción: ${e.localizedMessage}")
-        }
-    } finally {
-        client.close()
+    }.addOnFailureListener { exception ->
+        onError("Error al obtener token: ${exception.localizedMessage}")
     }
+
 }
 
 fun valorarUsuarioFromApi(
+
     userUid: String,
     rating: Int,
     comentario: String? = null,
