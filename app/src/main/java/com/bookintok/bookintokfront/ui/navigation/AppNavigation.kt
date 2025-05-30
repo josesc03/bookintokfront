@@ -12,8 +12,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.bookintok.bookintokfront.ui.screens.BookDetailScreen
 import com.bookintok.bookintokfront.ui.screens.BookEditScreen
-import com.bookintok.bookintokfront.ui.screens.ChatsScreen
+import com.bookintok.bookintokfront.ui.screens.ChatScreen
 import com.bookintok.bookintokfront.ui.screens.HomeScreen
+import com.bookintok.bookintokfront.ui.screens.ListChatScreen
 import com.bookintok.bookintokfront.ui.screens.LocationScreen
 import com.bookintok.bookintokfront.ui.screens.LoginScreen
 import com.bookintok.bookintokfront.ui.screens.MainScreen
@@ -112,10 +113,21 @@ fun AppNavigation() {
             )
         }
 
+        composable(route = Screen.Chats.route) {
+            ListChatScreen(navController = navController)
+        }
 
-        composable(Screen.Chats.route) {
-            ChatsScreen(
+        composable(
+            route = Screen.Chat.route,
+            arguments = listOf(
+                navArgument("idChat") {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            ChatScreen(
                 navController = navController,
+                idChat = it.arguments?.getString("idChat").toString()
             )
         }
     }

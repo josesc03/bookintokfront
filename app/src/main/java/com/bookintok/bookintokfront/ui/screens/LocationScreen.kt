@@ -2,6 +2,7 @@ package com.bookintok.bookintokfront.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -17,11 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +43,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bookintok.bookintokfront.R
 import com.bookintok.bookintokfront.ui.navigation.Screen
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
@@ -96,11 +101,15 @@ fun LocationScreen(navController: NavHostController) {
         hasLocationPermission = isGranted
     }
 
+    var showMapDialog by remember { mutableStateOf(false) }
+
     var selectedPosition by remember { mutableStateOf<LatLng?>(null) }
 
     if (!hasLocationPermission) {
         Column(
-            modifier = Modifier.fillMaxSize().background(Color.White),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -154,12 +163,30 @@ fun LocationScreen(navController: NavHostController) {
                 )
                 Button(
                     onClick = {
-                        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-                        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                            location?.let {
-                                selectedPosition = LatLng(it.latitude, it.longitude)
+                        val fusedLocationClient =
+                            LocationServices.getFusedLocationProviderClient(context)
+
+                        val locationRequest = LocationRequest.Builder(
+                            Priority.PRIORITY_HIGH_ACCURACY,
+                            1000L
+                        ).setMaxUpdates(1).build()
+
+                        val locationCallback = object : LocationCallback() {
+                            override fun onLocationResult(locationResult: LocationResult) {
+                                val location = locationResult.lastLocation
+                                if (location != null) {
+                                    selectedPosition = LatLng(location.latitude, location.longitude)
+                                    showMapDialog = true
+                                }
+                                fusedLocationClient.removeLocationUpdates(this)
                             }
                         }
+
+                        fusedLocationClient.requestLocationUpdates(
+                            locationRequest,
+                            locationCallback,
+                            Looper.getMainLooper()
+                        )
                     },
                     modifier = Modifier
                         .padding(top = 16.dp)
@@ -186,11 +213,11 @@ fun LocationScreen(navController: NavHostController) {
                 modifier = Modifier.padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
-            ){
+            ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ){
+                ) {
                     Text(
                         text = "Prefiero seleccionar un punto",
                         color = Color.Black,
@@ -212,7 +239,7 @@ fun LocationScreen(navController: NavHostController) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ){
+                ) {
                     Text(
                         text = "Prefiero seleccionar una provincia",
                         color = Color.Black,
@@ -233,15 +260,15 @@ fun LocationScreen(navController: NavHostController) {
                 }
             }
 
-            if (selectedPosition != null) {
+            if (showMapDialog) {
                 MapaDialog(
                     selectedPosition = selectedPosition!!,
-                    onDismiss = { selectedPosition = null },
+                    onDismiss = { showMapDialog = false },
                     onPointSelected = {
                         updateLocation(latlng = it, onSuccess = {
                             navController.navigate(Screen.Main.route)
                         }, onError = {
-                            selectedPosition = null
+                            showMapDialog = false
                         })
                     }
                 )
@@ -269,7 +296,9 @@ fun MapaDialog(
             }
 
             Column(
-                modifier = Modifier.fillMaxSize().background(Color.White),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Box(modifier = Modifier.weight(1f)) {
@@ -312,11 +341,13 @@ fun MapaDialog(
                             color = Color.Black.copy(alpha = 0.6f)
                         )
                     ) {
-                        Text("Continuar",
-                            color = Color.Black.copy(alpha = 0.6f))
+                        Text(
+                            "Continuar",
+                            color = Color.Black.copy(alpha = 0.6f)
+                        )
                     }
 
-                    OutlinedButton (
+                    OutlinedButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = onDismiss,
                         colors = ButtonDefaults.outlinedButtonColors(
@@ -365,14 +396,18 @@ fun updateLocation(
 
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val response: HttpResponse = client.post("http://10.0.2.2:8080/update-location") {
-                        //val response: HttpResponse = client.post("http://192.168.1.23:8080/update-location") {
-                        header("Authorization", "Bearer $idToken")
-                        contentType(ContentType.Application.Json)
-                        setBody(mapOf(
-                            "latitud" to latitud,
-                            "longitud" to longitud))
-                    }
+                    val response: HttpResponse =
+                        client.post("http://10.0.2.2:8080/update-location") {
+                            //val response: HttpResponse = client.post("http://192.168.1.23:8080/update-location") {
+                            header("Authorization", "Bearer $idToken")
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                mapOf(
+                                    "latitud" to latitud,
+                                    "longitud" to longitud
+                                )
+                            )
+                        }
 
 
                     if (response.status.isSuccess()) {

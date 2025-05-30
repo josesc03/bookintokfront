@@ -40,5 +40,15 @@ sealed class Screen(val route: String) {
 
     object Chats : Screen("chats")
 
+    object Chat : Screen("chatPage?idChat={idChat}") {
+        fun createRoute(idChat: String?): String {
+            return if (idChat != null) {
+                "chatPage?idChat=$idChat"
+            } else {
+                "chatPage"
+            }
+        }
+    }
+
     // TODO: DEMAS PANTALLAS
 }

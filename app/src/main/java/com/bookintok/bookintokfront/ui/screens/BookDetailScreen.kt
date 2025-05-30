@@ -1,5 +1,6 @@
 package com.bookintok.bookintokfront.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,9 +57,20 @@ import com.bookintok.bookintokfront.ui.model.Usuario
 import com.bookintok.bookintokfront.ui.model.Valoracion
 import com.bookintok.bookintokfront.ui.navigation.Screen
 import com.google.firebase.auth.FirebaseAuth
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 
 @Preview(showBackground = true)
 @Composable
@@ -80,6 +93,8 @@ fun BookDetailScreenPreview() {
 
 @Composable
 fun BookDetailScreen(navController: NavController, bookId: String) {
+
+    val context = LocalContext.current
 
     var userUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
@@ -110,11 +125,15 @@ fun BookDetailScreen(navController: NavController, bookId: String) {
 
             libro = getLibroFromApi(bookId.toInt())
 
-            getUserFromApi(uid = libro?.uidUsuario.toString(), onSuccess = {
-                usuario = it
-            }, onError = {
-                errorMessage = it
-            })
+
+
+            getUserFromApi(
+                uid = libro?.uidUsuario.toString(),
+                onSuccess = {
+                    usuario = it
+                }, onError = {
+                    errorMessage = it
+                })
 
             getValoracionesFromApi(
                 onSuccess = {
@@ -274,7 +293,14 @@ fun BookDetailScreen(navController: NavController, bookId: String) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(8.dp),
+                                .padding(8.dp)
+                                .clickable(onClick = {
+                                    navController.navigate(
+                                        Screen.ProfilePage.createRoute(
+                                            usuario?.uid.toString()
+                                        )
+                                    )
+                                }),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             AsyncImage(
@@ -296,14 +322,7 @@ fun BookDetailScreen(navController: NavController, bookId: String) {
 
                             Column(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .clickable(onClick = {
-                                        navController.navigate(
-                                            Screen.ProfilePage.createRoute(
-                                                usuario?.uid.toString()
-                                            )
-                                        )
-                                    }),
+                                    .weight(1f),
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
@@ -323,7 +342,20 @@ fun BookDetailScreen(navController: NavController, bookId: String) {
 
                             Button(
                                 onClick = {
-                                    //TODO: Implementar la navegación a la pantalla de chat
+                                    createChatFromApi(
+                                        onSuccess = {
+                                            navController.navigate(Screen.Chat.createRoute(idChat = it))
+                                        },
+                                        onError = {
+                                            println(it)
+                                            Toast.makeText(
+                                                context,
+                                                "No se ha podido crear el chat",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        },
+                                        idLibro = bookId.toInt()
+                                    )
                                 },
                                 border = BorderStroke(1.dp, Color.Black.copy(.4f)),
                                 contentPadding = PaddingValues(0.dp),
@@ -394,5 +426,60 @@ fun BookDetailScreen(navController: NavController, bookId: String) {
 
         }
 
+    }
+}
+
+fun createChatFromApi(
+    idLibro: Int,
+    onSuccess: (String) -> Unit,
+    onError: (String) -> Unit
+) {
+    val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json { ignoreUnknownKeys = true })
+        }
+    }
+
+    val user = FirebaseAuth.getInstance().currentUser
+    if (user == null) {
+        onError("Usuario no autenticado")
+        return
+    }
+
+    user.getIdToken(true).addOnSuccessListener { result ->
+        val idToken = result.token
+        if (idToken == null) {
+            onError("No se pudo obtener el token de Firebase")
+            return@addOnSuccessListener
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response: HttpResponse = client.post("http://10.0.2.2:8080/chat/$idLibro") {
+                    header("Authorization", "Bearer $idToken")
+                }
+
+                if (response.status.isSuccess()) {
+                    val responseBody =
+                        Json.decodeFromString<Map<String, String>>(response.bodyAsText())
+                    withContext(Dispatchers.Main) {
+                        onSuccess(responseBody["idChat"] ?: "")
+                    }
+                } else {
+                    val errorBody = response.bodyAsText()
+                    withContext(Dispatchers.Main) {
+                        onError("Error HTTP ${response.status.value}: $errorBody")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onError("Excepción: ${e.localizedMessage}")
+                }
+            } finally {
+                client.close()
+            }
+        }
+    }.addOnFailureListener {
+        onError("Error al obtener el token de Firebase: ${it.localizedMessage}")
     }
 }

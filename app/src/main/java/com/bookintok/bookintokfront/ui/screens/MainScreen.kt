@@ -45,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -116,7 +117,7 @@ fun MainScreen(navController: NavController) {
 
     var cubiertaSelected by remember { mutableStateOf("") }
 
-    var distanciaSelected by remember { mutableStateOf(0f) }
+    var distanciaSelected by remember { mutableFloatStateOf(0f) }
 
     fun getAppliedFilters(): Map<String, Any> {
         val filtersMap = mutableMapOf<String, Any>()

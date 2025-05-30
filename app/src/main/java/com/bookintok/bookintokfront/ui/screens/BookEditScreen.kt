@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -201,7 +203,7 @@ fun CompactDropdownSelector(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier
-                .fillMaxWidth()
+                .heightIn(max = 375.dp)
                 .background(Color.White)
         ) {
             options.forEach { option ->
@@ -529,7 +531,13 @@ fun BookEditScreen(navController: NavController, bookId: String? = null) {
                 ) {
                     Button(
                         onClick = { navController.navigateUp() },
-                        border = BorderStroke(1.dp, Color.Black.copy(.6f))
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = Color(0xff006025)
+                        ),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = Color(0xff006025)
+                        )
                     ) {
                         Text("Cancelar")
                     }
