@@ -336,7 +336,7 @@ fun createUserInBackend(
 
     CoroutineScope(Dispatchers.IO).launch {
         try {
-            val response: HttpResponse = client.post("http://10.0.2.2:8080/register") {
+            val response: HttpResponse = client.post("http://192.168.1.135:8080/register") {
                 //val response: HttpResponse = client.post("http://192.168.1.23:8080/register") {
                     header("Authorization", "Bearer $idToken")
                     contentType(ContentType.Application.Json)

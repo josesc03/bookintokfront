@@ -236,7 +236,7 @@ fun checkLocationFromUID(
 
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val response: HttpResponse = client.get("http://10.0.2.2:8080/me") {
+                    val response: HttpResponse = client.get("http://192.168.1.135:8080/me") {
                         header("Authorization", "Bearer $idToken")
                     }
 

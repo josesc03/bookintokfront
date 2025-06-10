@@ -686,7 +686,7 @@ fun updateUser(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response: HttpResponse = client.post("http://10.0.2.2:8080/usuario/update") {
+                val response: HttpResponse = client.post("http://192.168.1.135:8080/usuario/update") {
                     header("Authorization", "Bearer $idToken")
                     contentType(ContentType.Application.Json)
                     setBody(data)
@@ -748,7 +748,7 @@ fun valorarUsuarioFromApi(
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val response: HttpResponse =
-                        client.post("http://10.0.2.2:8080/usuario/valorar/$userUid") {
+                        client.post("http://192.168.1.135:8080/usuario/valorar/$userUid") {
                             header("Authorization", "Bearer $idToken")
                             contentType(ContentType.Application.Json)
                             setBody(
@@ -867,7 +867,7 @@ fun getNombreFromApi(uid: String, onSuccess: (String) -> Unit) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val response: HttpResponse =
-                        client.get("http://10.0.2.2:8080/usuario/$uid/nombre") {
+                        client.get("http://192.168.1.135:8080/usuario/$uid/nombre") {
                             header("Authorization", "Bearer $idToken")
                         }
 
@@ -1006,7 +1006,7 @@ fun getUserFromApi(onSuccess: (Usuario) -> Unit, onError: (String) -> Unit, uid:
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val response: HttpResponse =
-                        client.get("http://10.0.2.2:8080/usuario/$uid") {
+                        client.get("http://192.168.1.135:8080/usuario/$uid") {
                             header("Authorization", "Bearer $idToken")
                         }
 
@@ -1061,7 +1061,7 @@ fun getValoracionesFromApi(
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val response: HttpResponse =
-                        client.get("http://10.0.2.2:8080/usuario/valoraciones/$uid") {
+                        client.get("http://192.168.1.135:8080/usuario/valoraciones/$uid") {
                             header("Authorization", "Bearer $idToken")
                         }
 
@@ -1116,7 +1116,7 @@ fun getLibrosFromUserApi(
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val response: HttpResponse =
-                        client.get("http://10.0.2.2:8080/libros/$uid") {
+                        client.get("http://192.168.1.135:8080/libros/$uid") {
                             header("Authorization", "Bearer $idToken")
                         }
 
@@ -1269,7 +1269,7 @@ suspend fun hasCompletedExchange(userUid: String): Boolean {
 
     return try {
         val response: HttpResponse =
-            client.get("http://10.0.2.2:8080/has-completed-exchange/$userUid") {
+            client.get("http://192.168.1.135:8080/has-completed-exchange/$userUid") {
                 header("Authorization", "Bearer $idToken")
             }
 
@@ -1299,7 +1299,7 @@ suspend fun hasUserRated(userUid: String): Boolean {
 
     return try {
         val response: HttpResponse =
-            client.get("http://10.0.2.2:8080/has-rated/$userUid") {
+            client.get("http://192.168.1.135:8080/has-rated/$userUid") {
                 header("Authorization", "Bearer $idToken")
             }
 

@@ -397,7 +397,7 @@ fun updateLocation(
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val response: HttpResponse =
-                        client.post("http://10.0.2.2:8080/update-location") {
+                        client.post("http://192.168.1.135:8080/update-location") {
                             //val response: HttpResponse = client.post("http://192.168.1.23:8080/update-location") {
                             header("Authorization", "Bearer $idToken")
                             contentType(ContentType.Application.Json)

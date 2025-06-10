@@ -225,7 +225,7 @@ object ListChatWebSocketManager {
 
     fun connect(token: String) {
         val request = Request.Builder()
-            .url("ws://10.0.2.2:8080/ws/chats")
+            .url("ws://192.168.1.135:8080/ws/chats")
             .addHeader("Authorization", "Bearer $token")
             .build()
 

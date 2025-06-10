@@ -455,7 +455,7 @@ fun createChatFromApi(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response: HttpResponse = client.post("http://10.0.2.2:8080/chat/$idLibro") {
+                val response: HttpResponse = client.post("http://192.168.1.135:8080/chat/$idLibro") {
                     header("Authorization", "Bearer $idToken")
                 }
 

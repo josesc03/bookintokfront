@@ -799,7 +799,7 @@ fun getLibrosFromApi(
                 }?.joinToString("&")
 
                 val url =
-                    "http://10.0.2.2:8080/libro/allLibros" + if (!queryParams.isNullOrBlank()) "?$queryParams" else ""
+                    "http://192.168.1.135:8080/libro/allLibros" + if (!queryParams.isNullOrBlank()) "?$queryParams" else ""
 
                 val response: HttpResponse = client.get(url) {
                     println("Requesting URL: $url with token: $idToken")

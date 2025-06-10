@@ -805,7 +805,7 @@ private fun eliminarLibro(idLibro: Int, onSuccess: () -> Unit, onError: (String)
                     val response: HttpResponse
 
                     response =
-                        client.delete("http://10.0.2.2:8080/libro/$idLibro") {
+                        client.delete("http://192.168.1.135:8080/libro/$idLibro") {
                             header("Authorization", "Bearer $idToken")
                             contentType(ContentType.Application.Json)
                         }
@@ -910,7 +910,7 @@ fun updateLibro(
 
                     if (idLibro != null) {
                         response =
-                            client.post("http://10.0.2.2:8080/libro/actualizarLibro/$idLibro") {
+                            client.post("http://192.168.1.135:8080/libro/actualizarLibro/$idLibro") {
                                 header("Authorization", "Bearer $idToken")
                                 contentType(ContentType.Application.Json)
                                 setBody(bookRequest)
@@ -918,7 +918,7 @@ fun updateLibro(
 
                     } else {
                         response =
-                            client.post("http://10.0.2.2:8080/libro/crearLibro") {
+                            client.post("http://192.168.1.135:8080/libro/crearLibro") {
                                 header("Authorization", "Bearer $idToken")
                                 contentType(ContentType.Application.Json)
                                 setBody(bookRequest)
@@ -967,7 +967,7 @@ suspend fun getLibroFromApi(idLibro: Int): Libro? {
     }
 
     return try {
-        val response: HttpResponse = client.get("http://10.0.2.2:8080/libro/$idLibro") {
+        val response: HttpResponse = client.get("http://192.168.1.135:8080/libro/$idLibro") {
             header("Authorization", "Bearer $idToken")
         }
 

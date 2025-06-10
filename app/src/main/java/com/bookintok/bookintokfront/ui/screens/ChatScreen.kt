@@ -512,7 +512,7 @@ fun confirmarIntercambioFromApi(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val url = "http://10.0.2.2:8080/chat/confirmar/$chatId"
+                val url = "http://192.168.1.135:8080/chat/confirmar/$chatId"
                 val response: HttpResponse = client.post(url) {
                     println("Requesting URL: $url with token: $idToken")
                     header("Authorization", "Bearer $idToken")
@@ -570,7 +570,7 @@ fun sendMessageFromApi(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val url = "http://10.0.2.2:8080/chat/send/$idChat"
+                val url = "http://192.168.1.135:8080/chat/send/$idChat"
                 val response: HttpResponse = client.post(url) {
                     println("Requesting URL: $url with token: $idToken")
                     setBody(content)
@@ -631,7 +631,7 @@ private fun cancelarIntercambioFromApi(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val url = "http://10.0.2.2:8080/chat/cancel/$idChat"
+                val url = "http://192.168.1.135:8080/chat/cancel/$idChat"
                 val response: HttpResponse = client.post(url) {
                     println("Requesting URL: $url with token: $idToken")
                     header("Authorization", "Bearer $idToken")
@@ -740,7 +740,7 @@ fun getChatInfoFromApi(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val url = "http://10.0.2.2:8080/chats/$chatId"
+                val url = "http://192.168.1.135:8080/chats/$chatId"
                 val response: HttpResponse = client.get(url) {
                     println("Requesting URL: $url with token: $idToken")
                     header("Authorization", "Bearer $idToken")
@@ -789,7 +789,7 @@ object ChatWebSocketManager {
 
     fun connect(token: String, idChat: Int) {
         val request = Request.Builder()
-            .url("ws://10.0.2.2:8080/ws/messages/$idChat")
+            .url("ws://192.168.1.135:8080/ws/messages/$idChat")
             .addHeader("Authorization", "Bearer $token")
             .build()
 
